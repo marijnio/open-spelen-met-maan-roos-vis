@@ -81,13 +81,14 @@ You can package your own local copy into a standalone debug APK for an Android t
    ```sh
    ./scripts/build_android.sh
    ```
-   This packages `main.lua`, `conf.lua`, `src/`, and your local `assets/` into `build/game.love` (excludes `local_config.lua` and `backup/`).
+   This packages `main.lua`, `conf.lua`, `logo.png` (when present), `src/`, and your local `assets/` into `build/game.love` (excludes `local_config.lua` and `backup/`).
 4. **Embed in `love-android` & compile the APK:**
-   Copy `build/game.love` into your local `love-android` checkout (or let the script do both steps):
+   Copy `build/game.love` into your local `love-android` checkout (or let the script handle embedding, icon generation, title configuration, and compilation):
    ```sh
    ./scripts/build_android.sh --love-android /path/to/love-android --build-apk
    ```
-   Manually, that corresponds to copying `build/game.love` to `app/src/embed/assets/game.love` (or `app/src/main/assets/game.love` depending on your `love-android` flavor) and running:
+   When `--love-android` is provided, the script also generates the Android `drawable-*/love.png` launcher icon densities from `logo.png` and sets the Android app title to `OpenSMRV` (configurable via `--app-name` and `--icon`).
+   Manually, embedding corresponds to copying `build/game.love` to `app/src/embed/assets/game.love` (or `app/src/main/assets/game.love` depending on your `love-android` flavor) and running:
    ```sh
    cd /path/to/love-android
    ./gradlew assembleEmbedNoRecordDebug

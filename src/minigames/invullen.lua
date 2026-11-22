@@ -1,6 +1,7 @@
 -- Mini-game 5: Invullen
 
 local Assets = require("src.core.assets")
+local ConfirmDialog = require("src.core.confirm_dialog")
 local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
@@ -10,27 +11,27 @@ InvullenGame.__index = InvullenGame
 local LEVEL_ROUNDS = {
   [1] = {
     { word = "roos", masked = "r . s", options = { "oo", "aa", "o", "i", "ee", "b" } },
-    { word = "sok",  masked = "so .",  options = { "k", "p", "o", "d", "s", "m" } },
+    { word = "sok", masked = "so .", options = { "k", "p", "o", "d", "s", "m" } },
     { word = "maan", masked = ". aan", options = { "m", "b", "p", "n", "s", "v" } },
-    { word = "pen",  masked = "pe .",  options = { "n", "m", "v", "r", "p", "s" } },
-    { word = "ik",   masked = ". k",   options = { "i", "r", "p", "s", "v", "n" } },
+    { word = "pen", masked = "pe .", options = { "n", "m", "v", "r", "p", "s" } },
+    { word = "ik", masked = ". k", options = { "i", "r", "p", "s", "v", "n" } },
     { word = "roos", masked = "roo .", options = { "s", "t", "v", "m", "b", "r" } },
-    { word = "sok",  masked = ". ok",  options = { "s", "t", "v", "r", "i", "n" } },
+    { word = "sok", masked = ". ok", options = { "s", "t", "v", "r", "i", "n" } },
     { word = "maan", masked = "maa .", options = { "n", "b", "p", "m", "v", "t" } },
-    { word = "vis",  masked = "v . s", options = { "i", "oo", "aa", "b", "t", "n" } },
-    { word = "ik",   masked = "i .",   options = { "k", "t", "p", "b", "v", "s" } },
+    { word = "vis", masked = "v . s", options = { "i", "oo", "aa", "b", "t", "n" } },
+    { word = "ik", masked = "i .", options = { "k", "t", "p", "b", "v", "s" } }
   },
   [2] = {
     { word = "buik", masked = ". uik", options = { "b", "d", "k", "t", "v", "p" } },
-    { word = "aap",  masked = ". p",   options = { "aa", "oo", "a", "e", "i", "ee" } },
+    { word = "aap", masked = ". p", options = { "aa", "oo", "a", "e", "i", "ee" } },
     { word = "neus", masked = "neu .", options = { "s", "o", "t", "r", "b", "v" } },
-    { word = "oog",  masked = "oo .",  options = { "g", "d", "b", "t", "s", "n" } },
+    { word = "oog", masked = "oo .", options = { "g", "d", "b", "t", "s", "n" } },
     { word = "teen", masked = ". een", options = { "t", "b", "p", "m", "s", "v" } },
     { word = "buik", masked = "b . k", options = { "ui", "p", "n", "s", "b", "i" } },
-    { word = "aap",  masked = "aa .",  options = { "p", "m", "n", "b", "r", "v" } },
+    { word = "aap", masked = "aa .", options = { "p", "m", "n", "b", "r", "v" } },
     { word = "neus", masked = ". eus", options = { "n", "m", "r", "s", "v", "t" } },
-    { word = "oog",  masked = ". g",   options = { "oo", "aa", "p", "n", "s", "t" } },
-    { word = "teen", masked = "tee .", options = { "n", "m", "s", "t", "b", "v" } },
+    { word = "oog", masked = ". g", options = { "oo", "aa", "p", "n", "s", "t" } },
+    { word = "teen", masked = "tee .", options = { "n", "m", "s", "t", "b", "v" } }
   },
   [3] = {
     { word = "poes", masked = "p . s", options = { "oe", "oo", "ee", "aa", "ij", "e" } },
@@ -41,32 +42,32 @@ local LEVEL_ROUNDS = {
     { word = "poes", masked = "poe .", options = { "s", "t", "v", "k", "i", "p" } },
     { word = "koek", masked = "k . k", options = { "oe", "ee", "aa", "i", "ij", "oo" } },
     { word = "koek", masked = "koe .", options = { "k", "p", "v", "m", "t", "d" } },
-    { word = "eet",  masked = ". t",   options = { "ee", "aa", "oo", "oe", "ij", "i" } },
-    { word = "ijs",  masked = "ij .",  options = { "s", "t", "p", "v", "d", "r" } },
+    { word = "eet", masked = ". t", options = { "ee", "aa", "oo", "oe", "ij", "i" } },
+    { word = "ijs", masked = "ij .", options = { "s", "t", "p", "v", "d", "r" } }
   },
   [4] = {
-    { word = "vis",  masked = ". is",  options = { "v", "r", "p", "m", "s", "d" } },
+    { word = "vis", masked = ". is", options = { "v", "r", "p", "m", "s", "d" } },
     { word = "teen", masked = "t . n", options = { "ee", "oe", "oo", "aa", "ij", "i" } },
-    { word = "eet",  masked = "ee .",  options = { "t", "p", "r", "s", "m", "d" } },
-    { word = "pen",  masked = ". en",  options = { "p", "d", "r", "t", "s", "n" } },
-    { word = "ijs",  masked = ". s",   options = { "ij", "i", "oo", "aa", "b", "s" } },
+    { word = "eet", masked = "ee .", options = { "t", "p", "r", "s", "m", "d" } },
+    { word = "pen", masked = ". en", options = { "p", "d", "r", "t", "s", "n" } },
+    { word = "ijs", masked = ". s", options = { "ij", "i", "oo", "aa", "b", "s" } },
     { word = "buik", masked = "bui .", options = { "k", "d", "m", "r", "z", "t" } },
     { word = "neus", masked = ". eus", options = { "n", "m", "p", "b", "r", "s" } },
     { word = "roos", masked = ". oos", options = { "r", "t", "s", "p", "b", "n" } },
     { word = "koek", masked = ". oek", options = { "k", "p", "s", "b", "t", "d" } },
-    { word = "doos", masked = "d . s", options = { "oo", "ee", "aa", "oe", "d", "s" } },
+    { word = "doos", masked = "d . s", options = { "oo", "ee", "aa", "oe", "d", "s" } }
   },
   [5] = {
-    { word = "weg",  masked = ". eg",  options = { "w", "h", "p", "e", "v", "u" } },
-    { word = "tak",  masked = "t . k", options = { "a", "u", "o", "e", "ij", "i" } },
-    { word = "bos",  masked = "bo .",  options = { "s", "z", "r", "o", "p", "b" } },
-    { word = "weg",  masked = "w . g", options = { "e", "a", "o", "u", "w", "i" } },
-    { word = "tak",  masked = "ta .",  options = { "k", "p", "h", "w", "r", "s" } },
-    { word = "bos",  masked = "b . s", options = { "o", "a", "e", "i", "u", "oo" } },
+    { word = "weg", masked = ". eg", options = { "w", "h", "p", "e", "v", "u" } },
+    { word = "tak", masked = "t . k", options = { "a", "u", "o", "e", "ij", "i" } },
+    { word = "bos", masked = "bo .", options = { "s", "z", "r", "o", "p", "b" } },
+    { word = "weg", masked = "w . g", options = { "e", "a", "o", "u", "w", "i" } },
+    { word = "tak", masked = "ta .", options = { "k", "p", "h", "w", "r", "s" } },
+    { word = "bos", masked = "b . s", options = { "o", "a", "e", "i", "u", "oo" } },
     { word = "huis", masked = ". uis", options = { "h", "p", "b", "d", "s", "w" } },
     { word = "huis", masked = "hui .", options = { "s", "t", "h", "k", "r", "p" } },
-    { word = "hek",  masked = "h . k", options = { "e", "a", "aa", "ee", "ie", "i" } },
-    { word = "hek",  masked = ". ek",  options = { "h", "p", "b", "w", "j", "k" } },
+    { word = "hek", masked = "h . k", options = { "e", "a", "aa", "ee", "ie", "i" } },
+    { word = "hek", masked = ". ek", options = { "h", "p", "b", "w", "j", "k" } }
   },
   [6] = {
     { word = "bijl", masked = ". ijl", options = { "b", "p", "d", "l", "h", "n" } },
@@ -78,7 +79,7 @@ local LEVEL_ROUNDS = {
     { word = "reus", masked = ". eus", options = { "r", "s", "t", "m", "d", "b" } },
     { word = "hout", masked = "h . t", options = { "ou", "oo", "oe", "uu", "eu", "o" } },
     { word = "hout", masked = "hou .", options = { "t", "s", "l", "d", "b", "r" } },
-    { word = "jas",  masked = ". as",  options = { "j", "l", "b", "d", "r", "t" } },
+    { word = "jas", masked = ". as", options = { "j", "l", "b", "d", "r", "t" } }
   },
   [7] = {
     { word = "geit", masked = ". eit", options = { "g", "f", "k", "m", "p", "d" } },
@@ -87,29 +88,29 @@ local LEVEL_ROUNDS = {
     { word = "geit", masked = "g . t", options = { "ei", "ie", "ij", "ui", "eu", "oe" } },
     { word = "duif", masked = "dui .", options = { "f", "v", "d", "h", "t", "n" } },
     { word = "pauw", masked = "p . w", options = { "au", "ou", "ei", "ie", "oe", "aa" } },
-    { word = "uil",  masked = "ui .",  options = { "l", "j", "i", "k", "t", "f" } },
-    { word = "uil",  masked = ". l",   options = { "ui", "ei", "ij", "au", "aa", "eu" } },
-    { word = "ei",   masked = ".",     options = { "ei", "ie", "ui", "oe", "oo", "au" } },
-    { word = "duif", masked = ". uif", options = { "d", "b", "p", "g", "t", "f" } },
+    { word = "uil", masked = "ui .", options = { "l", "j", "i", "k", "t", "f" } },
+    { word = "uil", masked = ". l", options = { "ui", "ei", "ij", "au", "aa", "eu" } },
+    { word = "ei", masked = ".", options = { "ei", "ie", "ui", "oe", "oo", "au" } },
+    { word = "duif", masked = ". uif", options = { "d", "b", "p", "g", "t", "f" } }
   },
   [8] = {
-    { word = "hut",  masked = ". ut",  options = { "h", "p", "v", "r", "b", "n" } },
-    { word = "jas",  masked = "j . s", options = { "a", "e", "o", "u", "i", "d" } },
-    { word = "uil",  masked = "ui .",  options = { "l", "k", "t", "j", "f", "r" } },
-    { word = "tak",  masked = ". ak",  options = { "t", "s", "l", "k", "d", "b" } },
-    { word = "bos",  masked = ". os",  options = { "b", "d", "s", "p", "g", "l" } },
+    { word = "hut", masked = ". ut", options = { "h", "p", "v", "r", "b", "n" } },
+    { word = "jas", masked = "j . s", options = { "a", "e", "o", "u", "i", "d" } },
+    { word = "uil", masked = "ui .", options = { "l", "k", "t", "j", "f", "r" } },
+    { word = "tak", masked = ". ak", options = { "t", "s", "l", "k", "d", "b" } },
+    { word = "bos", masked = ". os", options = { "b", "d", "s", "p", "g", "l" } },
     { word = "vuur", masked = ". uur", options = { "v", "f", "p", "r", "g", "z" } },
     { word = "hout", masked = ". out", options = { "h", "b", "p", "g", "n", "t" } },
     { word = "pauw", masked = ". auw", options = { "p", "b", "g", "m", "k", "d" } },
     { word = "geit", masked = "gei .", options = { "t", "s", "d", "p", "b", "r" } },
-    { word = "reus", masked = "reu .", options = { "s", "z", "t", "r", "v", "h" } },
-  },
+    { word = "reus", masked = "reu .", options = { "s", "z", "t", "r", "v", "h" } }
+  }
 }
 
 local PERM_TABLE = {
   { 1, 2, 3, 4, 5, 6 },
   { 6, 5, 4, 3, 2, 1 },
-  { 1, 6, 2, 5, 3, 4 },
+  { 1, 6, 2, 5, 3, 4 }
 }
 
 local PIC_W = 560
@@ -136,9 +137,8 @@ local TIMER_MAX = 100
 local TIMER_TICK_INTERVAL = 0.50
 local INITIAL_REVEAL_DELAY = 0.20
 local TILE_REVEAL_INTERVAL = 0.10
-local FLASH_BASE_TICKS = 28
-local FLASH_LEVEL_STEP = 2
-local TICK_SECONDS = 0.125
+local FLASH_DURATION_L1 = 1.8
+local FLASH_DURATION_L2 = 1.2
 local HINT_PENALTY = 5
 local WRONG_PENALTY = 10
 local REVEAL_DELAY = 1.50
@@ -155,13 +155,19 @@ local function pointInRect(px, py, rx, ry, rw, rh)
 end
 
 local function flashDurationForLevel(level)
-  return (FLASH_BASE_TICKS - FLASH_LEVEL_STEP * (level - 1)) * TICK_SECONDS
+  if level == 1 then
+    return FLASH_DURATION_L1
+  elseif level == 2 then
+    return FLASH_DURATION_L2
+  end
+  return 0
 end
 
 function InvullenGame.new(app)
   local self = setmetatable({}, InvullenGame)
   self.app = app
   self.hotzones = HotzoneManager.new(app.audio)
+  self.confirmDialog = ConfirmDialog.new(app)
   self.handlesEscape = true
 
   self.handCursor = Cursor.getSystem("hand")
@@ -194,6 +200,8 @@ function InvullenGame.new(app)
   self.timers = { 0, 0 }
   self.timerAccum = 0
   self.roundIndex = 1
+  self.roundOrder = {}
+  self:_shuffleRoundOrder()
   self.slotToOption = { 1, 2, 3, 4, 5, 6 }
   self.visibleTileCount = 0
   self.wordMasked = false
@@ -204,9 +212,21 @@ function InvullenGame.new(app)
   return self
 end
 
+function InvullenGame:_shuffleRoundOrder()
+  self.roundOrder = {}
+  for i = 1, ROUNDS_PER_LEVEL do
+    self.roundOrder[i] = i
+  end
+  for i = ROUNDS_PER_LEVEL, 2, -1 do
+    local j = love.math.random(1, i)
+    self.roundOrder[i], self.roundOrder[j] = self.roundOrder[j], self.roundOrder[i]
+  end
+end
+
 function InvullenGame:_currentRound()
   local rounds = LEVEL_ROUNDS[self.level] or LEVEL_ROUNDS[1]
-  return rounds[self.roundIndex]
+  local orderIdx = (self.roundOrder and self.roundOrder[self.roundIndex]) or self.roundIndex
+  return rounds[orderIdx]
 end
 
 function InvullenGame:_prepareRound()
@@ -248,7 +268,7 @@ function InvullenGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
       else
         self.app.scenes:switch("hub")
       end
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -260,7 +280,7 @@ function InvullenGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
     h = 60,
     normalImage = { "ui", "help" },
     hoverImage = { "ui", "hel2" },
-    onClick = onHelpClick,
+    onClick = onHelpClick
   })
 end
 
@@ -275,6 +295,7 @@ function InvullenGame:_enterSettings()
   self.phaseTimer = 0
   self.app.audio:stop()
 
+  self:_shuffleRoundOrder()
   self:_prepareRound()
 
   self.hotzones:clear()
@@ -293,8 +314,9 @@ function InvullenGame:_enterSettings()
       onClick = function()
         self.level = lvl
         self.roundIndex = 1
+        self:_shuffleRoundOrder()
         self:_prepareRound()
-      end,
+      end
     })
   end
 
@@ -309,7 +331,7 @@ function InvullenGame:_enterSettings()
     hoverImage = { "ui", "startwe2" },
     onClick = function()
       self:_startGame(2)
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -323,7 +345,7 @@ function InvullenGame:_enterSettings()
     hoverImage = { "ui", "startee2" },
     onClick = function()
       self:_startGame(1)
-    end,
+    end
   })
 
   self:_syncHover()
@@ -332,7 +354,7 @@ end
 function InvullenGame:_startRoundReveal()
   self.phase = "revealing_tiles"
   self.visibleTileCount = 0
-  self.wordMasked = false
+  self.wordMasked = (flashDurationForLevel(self.level) == 0)
   self.flashTimer = 0
   self.phaseTimer = INITIAL_REVEAL_DELAY + TILE_REVEAL_INTERVAL
   self.timerAccum = 0
@@ -346,13 +368,19 @@ function InvullenGame:_startGame(players)
   self.timerAccum = 0
   self.roundIndex = 1
   self.app.audio:stop()
+  self:_shuffleRoundOrder()
 
   self.hotzones:clear()
-  self:_addBaseChromeHotzones(function()
-    self.app.audio:clearAndPlay("jantje", "invsphp1")
-  end, function()
-    self:_enterSettings()
-  end)
+  self:_addBaseChromeHotzones(
+    function()
+      self.app.audio:clearAndPlay("jantje", "invsphp1")
+    end, function()
+      self.confirmDialog:open(function()
+        self.app.audio:stop()
+        self:_enterSettings()
+      end)
+    end
+  )
 
   self:_syncHover()
   self:_prepareRound()
@@ -361,9 +389,9 @@ end
 
 function InvullenGame:_triggerOpnieuw()
   if self.phase ~= "revealing_tiles"
-    and self.phase ~= "playing"
-    and self.phase ~= "hint_speak"
-    and self.phase ~= "correct_speak" then
+      and self.phase ~= "playing"
+      and self.phase ~= "hint_speak"
+      and self.phase ~= "correct_speak" then
     return
   end
 
@@ -413,6 +441,7 @@ function InvullenGame:enter(params)
 end
 
 function InvullenGame:exit()
+  self.confirmDialog:close()
   self.hotzones:clear()
   Cursor.set(self.arrowCursor)
 end
@@ -446,6 +475,11 @@ function InvullenGame:_updateCursor(vx, vy)
 end
 
 function InvullenGame:update(dt)
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:update(dt)
+    return
+  end
+
   local vx, vy = self.app:getVirtualPointer()
   self.hotzones:update(vx, vy, self.app.isTouchMode)
 
@@ -456,8 +490,14 @@ function InvullenGame:update(dt)
       if self.visibleTileCount >= TILE_COUNT then
         self.phase = "playing"
         self.phaseTimer = 0
-        self.wordMasked = false
-        self.flashTimer = flashDurationForLevel(self.level)
+        local flashTime = flashDurationForLevel(self.level)
+        if flashTime > 0 then
+          self.wordMasked = false
+          self.flashTimer = flashTime
+        else
+          self.wordMasked = true
+          self.flashTimer = 0
+        end
         self.timerAccum = 0
         local round = self:_currentRound()
         if round then
@@ -519,13 +559,15 @@ function InvullenGame:update(dt)
   elseif self.phase == "finishing" then
     self.phaseTimer = self.phaseTimer - dt
     if self.phaseTimer <= 0 then
-      self.app.scenes:switch("highscore", {
-        gameId = "invullen",
-        players = self.players,
-        scores = { self.scores[1], self.scores[2] },
-        returnTo = "invullen",
-        returnParams = { level = math.min(8, self.level + 1) },
-      })
+      self.app.scenes:switch(
+        "highscore", {
+          gameId = "invullen",
+          players = self.players,
+          scores = { self.scores[1], self.scores[2] },
+          returnTo = "invullen",
+          returnParams = { level = math.min(8, self.level + 1) }
+        }
+      )
     end
   end
 
@@ -664,8 +706,9 @@ function InvullenGame:_drawSettings()
     love.graphics.rectangle("fill", 0, 0, 640, BAR_Y)
   end
 
-  local round = self:_currentRound()
-  self:_drawWordBox(round and round.word or "")
+  local rounds = LEVEL_ROUNDS[self.level] or LEVEL_ROUNDS[1]
+  local previewWord = rounds[1] and rounds[1].word or ""
+  self:_drawWordBox(previewWord)
 
   love.graphics.setColor(0, 0, 130 / 255, 1)
   love.graphics.rectangle("fill", 0, BAR_Y, 640, BAR_H)
@@ -727,9 +770,17 @@ function InvullenGame:draw()
 
   love.graphics.setColor(1, 1, 1, 1)
   self.hotzones:draw(self.app.debugHotzones)
+
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:draw()
+  end
 end
 
 function InvullenGame:mousepressed(vx, vy, button)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:mousepressed(vx, vy, button)
+  end
+
   if self.hotzones:mousepressed(vx, vy, button) then
     return true
   end
@@ -757,8 +808,9 @@ function InvullenGame:mousepressed(vx, vy, button)
 
   if self.slotToOption[slot] == 1 then
     self.scores[self.activePlayer] = self.scores[self.activePlayer]
-      + self.timers[self.activePlayer]
-      + (self.level - 1)
+        + self.timers[self.activePlayer]
+        + (self.level - 1)
+    self.wordMasked = false
     self.app.audio:clearAndPlay("words", round.word)
     self.phase = "correct_speak"
   else
@@ -771,12 +823,19 @@ function InvullenGame:mousepressed(vx, vy, button)
 end
 
 function InvullenGame:keypressed(key)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:keypressed(key)
+  end
+
   if key == "escape" then
-    self.app.audio:stop()
     if self.phase == "settings" then
+      self.app.audio:stop()
       self.app.scenes:switch("hub")
     elseif self.phase ~= "finishing" then
-      self:_enterSettings()
+      self.confirmDialog:open(function()
+        self.app.audio:stop()
+        self:_enterSettings()
+      end)
     end
   end
 end

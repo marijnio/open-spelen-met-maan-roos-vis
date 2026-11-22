@@ -1,6 +1,7 @@
 -- Mini-game 1: Onthouden maar! (Memory)
 
 local Assets = require("src.core.assets")
+local ConfirmDialog = require("src.core.confirm_dialog")
 local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
@@ -69,6 +70,7 @@ function MemoryGame.new(app)
   local self = setmetatable({}, MemoryGame)
   self.app = app
   self.hotzones = HotzoneManager.new(app.audio)
+  self.confirmDialog = ConfirmDialog.new(app)
   self.handlesEscape = true
 
   self.handCursor = Cursor.getSystem("hand")
@@ -240,8 +242,10 @@ function MemoryGame:_startGame(players)
     normalImage = { "ui", "terug" },
     hoverImage = { "ui", "teru2" },
     onClick = function()
-      self.app.audio:stop()
-      self:_enterSettings()
+      self.confirmDialog:open(function()
+        self.app.audio:stop()
+        self:_enterSettings()
+      end)
     end,
   })
 
@@ -322,11 +326,17 @@ function MemoryGame:enter(params)
 end
 
 function MemoryGame:exit()
+  self.confirmDialog:close()
   self.hotzones:clear()
   Cursor.set(self.arrowCursor)
 end
 
 function MemoryGame:update(dt)
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:update(dt)
+    return
+  end
+
   local vx, vy = self.app:getVirtualPointer()
   self.hotzones:update(vx, vy, self.app.isTouchMode)
 
@@ -506,9 +516,17 @@ function MemoryGame:draw()
 
   love.graphics.setColor(1, 1, 1, 1)
   self.hotzones:draw(self.app.debugHotzones)
+
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:draw()
+  end
 end
 
 function MemoryGame:mousepressed(vx, vy, button)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:mousepressed(vx, vy, button)
+  end
+
   if self.hotzones:mousepressed(vx, vy, button) then
     return true
   end
@@ -566,11 +584,18 @@ function MemoryGame:mousepressed(vx, vy, button)
 end
 
 function MemoryGame:keypressed(key)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:keypressed(key)
+  end
+
   if key == "escape" then
-    self.app.audio:stop()
     if self.phase == "playing" or self.phase == "revealing" then
-      self:_enterSettings()
+      self.confirmDialog:open(function()
+        self.app.audio:stop()
+        self:_enterSettings()
+      end)
     elseif self.phase == "settings" then
+      self.app.audio:stop()
       self.app.scenes:switch("hub")
     end
   end

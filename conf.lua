@@ -4,6 +4,7 @@ function love.conf(t)
   t.externalstorage = true
 
   t.window.title = "Spelen met Maan Roos Vis"
+  t.window.icon = "logo.png"
   t.window.width = 1280
   t.window.height = 960
   t.window.minwidth = 640

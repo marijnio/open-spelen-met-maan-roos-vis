@@ -2,6 +2,7 @@
 
 local utf8 = require("utf8")
 local Assets = require("src.core.assets")
+local ConfirmDialog = require("src.core.confirm_dialog")
 local HighScores = require("src.core.highscores")
 local HotzoneManager = require("src.core.hotzone")
 
@@ -61,6 +62,7 @@ function HighScoreState.new(app)
   local self = setmetatable({}, HighScoreState)
   self.app = app
   self.hotzones = HotzoneManager.new(app.audio)
+  self.confirmDialog = ConfirmDialog.new(app)
   self.handlesEscape = true
 
   self.entryFont = love.graphics.newFont(20)
@@ -172,6 +174,28 @@ function HighScoreState:_enterBoardPhase()
       self:_goBack()
     end,
   })
+
+  self.hotzones:add({
+    id = "clear_scores",
+    label = "Opnieuw",
+    x = 72,
+    y = 416,
+    w = 60,
+    h = 60,
+    normalImage = { "ui", "opnieuw" },
+    hoverImage = { "ui", "opnieu2" },
+    onClick = function()
+      self.confirmDialog:open(
+        function()
+          HighScores.reset()
+          HighScores.save()
+        end,
+        nil,
+        "Weet je zeker dat je alle\nscores wilt wissen?",
+        "Wissen!"
+      )
+    end,
+  })
 end
 
 function HighScoreState:_goBack()
@@ -180,12 +204,18 @@ function HighScoreState:_goBack()
 end
 
 function HighScoreState:exit()
+  self.confirmDialog:close()
   love.keyboard.setKeyRepeat(false)
   setVirtualKeyboard(false)
   self.hotzones:clear()
 end
 
 function HighScoreState:update(dt)
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:update(dt)
+    return
+  end
+
   self.blinkTimer = self.blinkTimer + dt
   local vx, vy = self.app:getVirtualPointer()
   self.hotzones:update(vx, vy, self.app.isTouchMode)
@@ -273,9 +303,17 @@ function HighScoreState:draw()
 
   love.graphics.setColor(1, 1, 1, 1)
   self.hotzones:draw(self.app.debugHotzones)
+
+  if self.confirmDialog:isOpen() then
+    self.confirmDialog:draw()
+  end
 end
 
 function HighScoreState:mousepressed(vx, vy, button)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:mousepressed(vx, vy, button)
+  end
+
   if self.hotzones:mousepressed(vx, vy, button) then
     return
   end
@@ -315,6 +353,10 @@ function HighScoreState:textinput(text)
 end
 
 function HighScoreState:keypressed(key)
+  if self.confirmDialog:isOpen() then
+    return self.confirmDialog:keypressed(key)
+  end
+
   if self.phase == "entry" then
     if key == "backspace" then
       local cur = self.names[self.activeField] or ""

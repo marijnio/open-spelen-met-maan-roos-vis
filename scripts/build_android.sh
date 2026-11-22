@@ -9,6 +9,8 @@ INCLUDE_ASSETS=true
 OUTPUT_PATH="${REPO_ROOT}/build/game.love"
 LOVE_ANDROID_DIR=""
 BUILD_APK=false
+APP_NAME="OpenSMRV"
+ICON_PATH="${REPO_ROOT}/logo.png"
 
 usage() {
   cat <<'EOF'
@@ -22,10 +24,37 @@ Options:
                          (default: $SMRV_ASSETS_DIR or <repo>/assets)
   --no-assets            Build a code-only .love (side-load assets to Android save dir)
   --output <path>        Output .love path (default: <repo>/build/game.love)
-  --love-android <path>  Copy game.love into a local love-android checkout
+  --love-android <path>  Copy game.love into a local love-android checkout,
+                         apply app icon and Android title
+  --app-name <name>      Android app title (default: OpenSMRV)
+  --icon <path>          App icon PNG path (default: <repo>/logo.png)
   --build-apk            Run Gradle in --love-android and copy APK into build/
   -h, --help             Show this help text
 EOF
+}
+
+resize_icon() {
+  local src="$1"
+  local dst="$2"
+  local size="$3"
+  mkdir -p "$(dirname "${dst}")"
+  if command -v magick >/dev/null 2>&1; then
+    magick "${src}" -resize "${size}x${size}!" "PNG32:${dst}"
+  elif command -v convert >/dev/null 2>&1; then
+    convert "${src}" -resize "${size}x${size}!" "PNG32:${dst}"
+  elif command -v sips >/dev/null 2>&1; then
+    sips -z "${size}" "${size}" "${src}" --out "${dst}" >/dev/null
+  elif command -v python3 >/dev/null 2>&1 && python3 -c "import PIL" >/dev/null 2>&1; then
+    python3 -c '
+import sys
+from PIL import Image
+src, dst, size = sys.argv[1], sys.argv[2], int(sys.argv[3])
+Image.open(src).convert("RGBA").resize((size, size), Image.LANCZOS).save(dst, "PNG")
+' "${src}" "${dst}" "${size}"
+  else
+    echo "Error: Cannot resize icon; install ImageMagick (magick/convert), sips, or Python Pillow." >&2
+    exit 1
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
@@ -47,6 +76,16 @@ while [[ $# -gt 0 ]]; do
     --love-android)
       [[ $# -ge 2 ]] || { echo "Error: --love-android requires a path" >&2; exit 1; }
       LOVE_ANDROID_DIR="$2"
+      shift 2
+      ;;
+    --app-name)
+      [[ $# -ge 2 ]] || { echo "Error: --app-name requires a value" >&2; exit 1; }
+      APP_NAME="$2"
+      shift 2
+      ;;
+    --icon)
+      [[ $# -ge 2 ]] || { echo "Error: --icon requires a path" >&2; exit 1; }
+      ICON_PATH="$2"
       shift 2
       ;;
     --build-apk)
@@ -97,6 +136,10 @@ cp "${REPO_ROOT}/main.lua" "${STAGE_DIR}/main.lua"
 cp "${REPO_ROOT}/conf.lua" "${STAGE_DIR}/conf.lua"
 cp -R "${REPO_ROOT}/src" "${STAGE_DIR}/src"
 
+if [[ -f "${ICON_PATH}" ]]; then
+  cp "${ICON_PATH}" "${STAGE_DIR}/logo.png"
+fi
+
 if [[ "${INCLUDE_ASSETS}" == true ]]; then
   mkdir -p "${STAGE_DIR}/assets"
   cp -R "${ASSETS_DIR}/." "${STAGE_DIR}/assets/"
@@ -125,8 +168,10 @@ if [[ -n "${LOVE_ANDROID_DIR}" ]]; then
 
   if [[ -d "${LOVE_ANDROID_DIR}/app/src/embed" ]]; then
     DEST_ASSETS_DIR="${LOVE_ANDROID_DIR}/app/src/embed/assets"
+    DEST_RES_DIR="${LOVE_ANDROID_DIR}/app/src/embed/res"
   elif [[ -d "${LOVE_ANDROID_DIR}/app/src/main" ]]; then
     DEST_ASSETS_DIR="${LOVE_ANDROID_DIR}/app/src/main/assets"
+    DEST_RES_DIR="${LOVE_ANDROID_DIR}/app/src/main/res"
   else
     echo "Error: Could not find app/src/embed or app/src/main inside ${LOVE_ANDROID_DIR}." >&2
     exit 1
@@ -135,6 +180,81 @@ if [[ -n "${LOVE_ANDROID_DIR}" ]]; then
   mkdir -p "${DEST_ASSETS_DIR}"
   cp "${ABS_OUTPUT}" "${DEST_ASSETS_DIR}/game.love"
   echo "Copied bundle to ${DEST_ASSETS_DIR}/game.love"
+
+  if [[ -f "${ICON_PATH}" ]]; then
+    resize_icon "${ICON_PATH}" "${DEST_RES_DIR}/drawable-mdpi/love.png" 48
+    resize_icon "${ICON_PATH}" "${DEST_RES_DIR}/drawable-hdpi/love.png" 72
+    resize_icon "${ICON_PATH}" "${DEST_RES_DIR}/drawable-xhdpi/love.png" 96
+    resize_icon "${ICON_PATH}" "${DEST_RES_DIR}/drawable-xxhdpi/love.png" 144
+    resize_icon "${ICON_PATH}" "${DEST_RES_DIR}/drawable-xxxhdpi/love.png" 192
+    echo "Updated launcher icons in ${DEST_RES_DIR}/drawable-*/love.png from ${ICON_PATH}"
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "${LOVE_ANDROID_DIR}" "${APP_NAME}" <<'PY'
+import pathlib
+import re
+import sys
+from xml.sax.saxutils import escape
+
+love_dir = pathlib.Path(sys.argv[1])
+app_name = sys.argv[2]
+
+attr_escaped = escape(app_name, {'"': "&quot;", "'": "&apos;"})
+text_escaped = escape(app_name)
+
+manifest_paths = [
+    love_dir / "app" / "src" / "main" / "AndroidManifest.xml",
+    love_dir / "app" / "src" / "embed" / "AndroidManifest.xml",
+]
+
+for manifest in manifest_paths:
+    if not manifest.is_file():
+        continue
+    orig = manifest.read_text(encoding="utf-8")
+    updated = orig
+
+    updated = re.sub(
+        r"<application\b[^>]*>",
+        lambda m: re.sub(r'android:label="[^"]*"', f'android:label="{attr_escaped}"', m.group(0)),
+        updated,
+    )
+
+    def replace_activity_label(match):
+        tag = match.group(0)
+        if "GameActivity" in tag or "LÖVE" in tag:
+            return re.sub(r'android:label="[^"]*"', f'android:label="{attr_escaped}"', tag)
+        return tag
+
+    updated = re.sub(r"<activity\b[^>]*>", replace_activity_label, updated)
+    updated = updated.replace('android:label="LÖVE for Android"', f'android:label="{attr_escaped}"')
+
+    if updated != orig:
+        manifest.write_text(updated, encoding="utf-8")
+        print(f"Updated app title to '{app_name}' in {manifest}")
+
+strings_paths = [
+    love_dir / "app" / "src" / "main" / "res" / "values" / "strings.xml",
+    love_dir / "app" / "src" / "embed" / "res" / "values" / "strings.xml",
+]
+
+for strings_xml in strings_paths:
+    if not strings_xml.is_file():
+        continue
+    orig = strings_xml.read_text(encoding="utf-8")
+    updated = re.sub(
+        r'(<string\b[^>]*\bname="app_name"[^>]*>)(.*?)(</string>)',
+        lambda m: f"{m.group(1)}{text_escaped}{m.group(3)}",
+        orig,
+        flags=re.DOTALL,
+    )
+    if updated != orig:
+        strings_xml.write_text(updated, encoding="utf-8")
+        print(f"Updated app_name to '{app_name}' in {strings_xml}")
+PY
+  else
+    echo "Warning: python3 not found; skipping AndroidManifest.xml / strings.xml title update." >&2
+  fi
 
   if [[ "${BUILD_APK}" == true ]]; then
     if [[ ! -x "${LOVE_ANDROID_DIR}/gradlew" ]]; then
