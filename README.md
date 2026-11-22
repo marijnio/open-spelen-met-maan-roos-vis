@@ -2,6 +2,12 @@
 
 An independent open-source reimplementation of the classic 1997 Dutch educational PC game *Spelen met Maan Roos Vis*, built with [LÖVE (Love2D)](https://love2d.org/) in Lua.
 
+## Screenshots
+
+| Start Menu | Draai maar om |
+| :---: | :---: |
+| ![Start Menu](docs/screenshots/1.png) | ![Draai maar om minigame](docs/screenshots/2.png) |
+
 ## Legal & Copyright Notice
 
 This project is an **independent open-source engine reimplementation** and is **not affiliated with, authorized by, or endorsed by Uitgeverij Zwijsen or Radarsoft B.V.**

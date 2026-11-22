@@ -10,8 +10,6 @@ local_config.lua
 # Safety-net extensions for legacy and converted media
 *.bmp
 *.BMP
-*.png
-*.PNG
 *.wav
 *.WAV
 *.bwv
