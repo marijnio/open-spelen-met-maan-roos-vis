@@ -2,6 +2,7 @@
 
 local Assets = require("src.core.assets")
 local AudioQueue = require("src.core.audio_queue")
+local HighScores = require("src.core.highscores")
 local SceneManager = require("src.core.scene_manager")
 local Viewport = require("src.core.viewport")
 
@@ -10,6 +11,7 @@ local IntroState = require("src.states.intro")
 local StartMenuState = require("src.states.start_menu")
 local AboutState = require("src.states.about")
 local HubState = require("src.states.hub")
+local HighScoreState = require("src.states.highscore")
 
 local MemoryGame = require("src.minigames.memory")
 local ElectroGame = require("src.minigames.electro")
@@ -25,6 +27,7 @@ local App = {
 function love.load()
   Assets.setFilterMode("nearest")
   Assets.init()
+  HighScores.load()
 
   App.viewport = Viewport.new("nearest")
   App.audio = AudioQueue.new()
@@ -35,6 +38,7 @@ function love.load()
   App.scenes:register("start_menu", StartMenuState.new)
   App.scenes:register("about", AboutState.new)
   App.scenes:register("hub", HubState.new)
+  App.scenes:register("highscore", HighScoreState.new)
   App.scenes:register("memory", MemoryGame)
   App.scenes:register("electro", ElectroGame)
   App.scenes:register("draaiom", DraaiomGame)
@@ -94,6 +98,10 @@ function love.keypressed(key)
     love.window.setFullscreen(not love.window.getFullscreen())
     return
   elseif key == "escape" then
+    if App.scenes.current and App.scenes.current.handlesEscape then
+      App.scenes:keypressed(key)
+      return
+    end
     local cur = App.scenes.currentName
     if cur == "intro" or cur == "start_menu" or cur == "missing_assets" then
       App.scenes:keypressed(key)
@@ -108,4 +116,8 @@ function love.keypressed(key)
   end
 
   App.scenes:keypressed(key)
+end
+
+function love.textinput(text)
+  App.scenes:textinput(text)
 end

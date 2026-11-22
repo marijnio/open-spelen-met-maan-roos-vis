@@ -74,4 +74,10 @@ function SceneManager:keypressed(key)
   end
 end
 
+function SceneManager:textinput(text)
+  if self.current and self.current.textinput then
+    self.current:textinput(text)
+  end
+end
+
 return SceneManager
