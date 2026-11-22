@@ -1,0 +1,39 @@
+# Original CD-ROM dump and converted runtime assets (never commit copyrighted media)
+backup/
+assets/
+assets/raw/
+assets/converted/
+
+# Local developer asset path override
+local_config.lua
+
+# Safety-net extensions for legacy and converted media
+*.bmp
+*.BMP
+*.png
+*.PNG
+*.wav
+*.WAV
+*.bwv
+*.BWV
+*.ogg
+*.OGG
+*.aif
+*.AIF
+*.dxr
+*.DXR
+*.cxt
+*.CXT
+*.exe
+*.EXE
+*.dll
+*.DLL
+*.ico
+*.ICO
+
+# Python, macOS, and log artifacts
+__pycache__/
+tools/__pycache__/
+*.pyc
+.DS_Store
+*.log
