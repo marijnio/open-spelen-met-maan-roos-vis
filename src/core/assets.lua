@@ -11,6 +11,7 @@ local Assets = {
   checkedPaths = {},
   loadError = nil,
   images = {},
+  imageData = {},
   audio = {},
   warned = {},
   filterMode = "nearest",
@@ -93,6 +94,7 @@ function Assets.init()
   Assets.checkedPaths = {}
   Assets.loadError = nil
   Assets.images = {}
+  Assets.imageData = {}
   Assets.audio = {}
   Assets.warned = {}
 
@@ -219,6 +221,40 @@ function Assets.getImage(category, name)
   img:setFilter(Assets.filterMode, Assets.filterMode)
   Assets.images[cacheKey] = img
   return img
+end
+
+function Assets.getImageData(category, name)
+  if not Assets.ready or not Assets.manifest then
+    return nil
+  end
+  local catTable = Assets.manifest.images and Assets.manifest.images[category]
+  if not catTable then
+    return nil
+  end
+  local relPath = catTable[name]
+  if not relPath then
+    return nil
+  end
+
+  local cacheKey = category .. ":" .. name
+  if Assets.imageData[cacheKey] then
+    return Assets.imageData[cacheKey]
+  end
+
+  local input, fullPath = Assets:_resolveSourceInput(relPath)
+  if not input then
+    Assets:_warnOnce("imgd:" .. cacheKey, string.format("[Assets] Ontbrekende afbeelding (%s.%s): %s", category, name, fullPath))
+    return nil
+  end
+
+  local ok, data = pcall(love.image.newImageData, input)
+  if not ok or not data then
+    Assets:_warnOnce("imgd:" .. cacheKey, string.format("[Assets] Kon ImageData niet laden (%s.%s): %s", category, name, tostring(data)))
+    return nil
+  end
+
+  Assets.imageData[cacheKey] = data
+  return data
 end
 
 function Assets.getAudio(category, name, sourceType)
