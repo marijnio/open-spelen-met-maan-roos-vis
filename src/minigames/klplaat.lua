@@ -7,14 +7,14 @@ local KlplaatGame = {}
 KlplaatGame.__index = KlplaatGame
 
 local LEVELS = {
-  [1] = { key = "a", word = "pen",  letters = { "v", "m", "i", "s", "r", "p", "", "", "", "", "", "", "", "" } },
+  [1] = { key = "a", word = "pen", letters = { "v", "m", "i", "s", "r", "p", "", "", "", "", "", "", "", "" } },
   [2] = { key = "b", word = "buik", letters = { "t", "aa", "n", "b", "s", "v", "k", "m", "ui", "i", "r", "p", "", "" } },
   [3] = { key = "c", word = "zeep", letters = { "d", "z", "oe", "ee", "i", "k", "m", "r", "v", "s", "ij", "p", "", "" } },
-  [4] = { key = "d", word = "vis",  letters = { "i", "v", "s", "r", "oo", "m", "p", "b", "n", "aa", "d", "oe", "t", "k" } },
-  [5] = { key = "e", word = "hek",  letters = { "o", "w", "i", "r", "u", "a", "p", "e", "h", "v", "s", "p", "m", "aa" } },
+  [4] = { key = "d", word = "vis", letters = { "i", "v", "s", "r", "oo", "m", "p", "b", "n", "aa", "d", "oe", "t", "k" } },
+  [5] = { key = "e", word = "hek", letters = { "o", "w", "i", "r", "u", "a", "p", "e", "h", "v", "s", "p", "m", "aa" } },
   [6] = { key = "f", word = "riem", letters = { "v", "uu", "i", "eu", "s", "ou", "p", "aa", "ie", "t", "b", "n", "m", "oe" } },
   [7] = { key = "g", word = "pauw", letters = { "f", "ei", "g", "au", "v", "i", "p", "s", "d", "t", "b", "n", "oo", "aa" } },
-  [8] = { key = "h", word = "huis", letters = { "f", "eu", "w", "j", "i", "ei", "v", "uu", "a", "m", "oo", "s", "b", "t" } },
+  [8] = { key = "h", word = "huis", letters = { "f", "eu", "w", "j", "i", "ei", "v", "uu", "a", "m", "oo", "s", "b", "t" } }
 }
 
 local function packRgb(r, g, b)
@@ -30,26 +30,26 @@ local function makePaletteEntry(fillRgb, altRgb)
     gn = fillRgb[2] / 255,
     bn = fillRgb[3] / 255,
     fillPacked = packRgb(fillRgb[1], fillRgb[2], fillRgb[3]),
-    altPacked = packRgb(altRgb[1], altRgb[2], altRgb[3]),
+    altPacked = packRgb(altRgb[1], altRgb[2], altRgb[3])
   }
 end
 
 -- Table 1 = brush/swatch colors; Table 2 = reference colors (dark shades use 153 in PIC_*1).
 local PALETTE = {
-  makePaletteEntry({ 255,   0,   0 }, { 255,   0,   0 }),
-  makePaletteEntry({   0, 255,   0 }, {   0, 255,   0 }),
-  makePaletteEntry({ 255, 255,   0 }, { 255, 255,   0 }),
-  makePaletteEntry({   0,   0, 255 }, {   0,   0, 255 }),
-  makePaletteEntry({ 255,   0, 255 }, { 255,   0, 255 }),
-  makePaletteEntry({   0, 255, 255 }, {   0, 255, 255 }),
+  makePaletteEntry({ 255, 0, 0 }, { 255, 0, 0 }),
+  makePaletteEntry({ 0, 255, 0 }, { 0, 255, 0 }),
+  makePaletteEntry({ 255, 255, 0 }, { 255, 255, 0 }),
+  makePaletteEntry({ 0, 0, 255 }, { 0, 0, 255 }),
+  makePaletteEntry({ 255, 0, 255 }, { 255, 0, 255 }),
+  makePaletteEntry({ 0, 255, 255 }, { 0, 255, 255 }),
   makePaletteEntry({ 255, 255, 255 }, { 255, 255, 255 }),
-  makePaletteEntry({ 128,   0,   0 }, { 153,   0,   0 }),
-  makePaletteEntry({   0, 128,   0 }, {   0, 153,   0 }),
-  makePaletteEntry({ 128, 128,   0 }, { 153, 153,   0 }),
-  makePaletteEntry({   0,   0, 128 }, {   0,   0, 153 }),
-  makePaletteEntry({ 128,   0, 128 }, { 153,   0, 153 }),
-  makePaletteEntry({   0, 128, 128 }, {   0, 153, 153 }),
-  makePaletteEntry({ 128, 128, 128 }, { 153, 153, 128 }),
+  makePaletteEntry({ 128, 0, 0 }, { 153, 0, 0 }),
+  makePaletteEntry({ 0, 128, 0 }, { 0, 153, 0 }),
+  makePaletteEntry({ 128, 128, 0 }, { 153, 153, 0 }),
+  makePaletteEntry({ 0, 0, 128 }, { 0, 0, 153 }),
+  makePaletteEntry({ 128, 0, 128 }, { 153, 0, 153 }),
+  makePaletteEntry({ 0, 128, 128 }, { 0, 153, 153 }),
+  makePaletteEntry({ 128, 128, 128 }, { 153, 153, 128 })
 }
 
 local PAINT_CURSOR_BITMAP = {
@@ -84,7 +84,7 @@ local PAINT_CURSOR_BITMAP = {
   ".#####..........................",
   ".##.............................",
   ".#..............................",
-  "................................",
+  "................................"
 }
 
 local PIC_X = 8
@@ -115,7 +115,7 @@ local BAR_H = 68
 local CLOCK_RECT_1P = { x = 330, y = 416, w = 45, h = 60 }
 local CLOCK_RECTS_2P = {
   { x = 210, y = 416, w = 45, h = 60 },
-  { x = 394, y = 416, w = 45, h = 60 },
+  { x = 394, y = 416, w = 45, h = 60 }
 }
 
 local TIMER_MAX = 100
@@ -269,7 +269,7 @@ function KlplaatGame:_addBaseChromeHotzones(onHelpClick)
     onClick = function()
       self.app.audio:stop()
       self.app.scenes:switch("hub")
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -281,7 +281,7 @@ function KlplaatGame:_addBaseChromeHotzones(onHelpClick)
     h = 60,
     normalImage = { "ui", "help" },
     hoverImage = { "ui", "hel2" },
-    onClick = onHelpClick,
+    onClick = onHelpClick
   })
 end
 
@@ -474,7 +474,7 @@ function KlplaatGame:_enterSettings()
       h = 30,
       onClick = function()
         self.level = lvl
-      end,
+      end
     })
   end
 
@@ -489,7 +489,7 @@ function KlplaatGame:_enterSettings()
     hoverImage = { "ui", "startwe2" },
     onClick = function()
       self:_startGame(2)
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -503,7 +503,7 @@ function KlplaatGame:_enterSettings()
     hoverImage = { "ui", "startee2" },
     onClick = function()
       self:_startGame(1)
-    end,
+    end
   })
 
   self:_syncHover()
@@ -541,7 +541,7 @@ function KlplaatGame:_startGame(players)
     hoverVo = { "jantje", "opnieuw" },
     onClick = function()
       self:_triggerOpnieuw()
-    end,
+    end
   })
 
   -- Sync hover immediately so start_1p -> opnieuw at (572, 416) does not trigger hoverVo.
@@ -568,6 +568,18 @@ function KlplaatGame:_enterFinishing()
   self.phase = "finishing_gong"
   self.phaseTimer = FINISH_GONG_DELAY
   self.app.audio:playSfx("gong")
+end
+
+function KlplaatGame:_completeLevel()
+  self.completed = true
+  self:_setOpnieuwEnabled(false)
+  if not self.selfMode and self.players == 1 then
+    self.scores[1] = self.scores[1] + self.timers[1]
+    self.phase = "bonus_wait"
+    self.phaseTimer = BONUS_WAIT_DELAY
+  else
+    self:_enterFinishing()
+  end
 end
 
 function KlplaatGame:_switchTurnOrTimeout()
@@ -626,8 +638,8 @@ function KlplaatGame:_updateCursor(vx, vy)
     if pointInRect(vx, vy, PIC_X, PIC_Y, PIC_W, PIC_H) then
       love.mouse.setCursor(self.paintCursor)
     elseif pointInRect(vx, vy, SAMPLE_X, SAMPLE_Y, SAMPLE_W, SAMPLE_H)
-      or self:_paletteSlotAt(vx, vy) ~= nil
-      or self:_isInClock(vx, vy) then
+        or self:_paletteSlotAt(vx, vy) ~= nil
+        or self:_isInClock(vx, vy) then
       love.mouse.setCursor(self.handCursor)
     else
       love.mouse.setCursor(self.arrowCursor)
@@ -717,13 +729,15 @@ function KlplaatGame:update(dt)
   elseif self.phase == "finishing_show" then
     self.phaseTimer = self.phaseTimer - dt
     if self.phaseTimer <= 0 then
-      self.app.scenes:switch("highscore", {
-        gameId = "klplaat",
-        players = self.players,
-        scores = { self.scores[1], self.scores[2] },
-        returnTo = "klplaat",
-        returnParams = { level = math.min(8, self.level + 1) },
-      })
+      self.app.scenes:switch(
+        "highscore", {
+          gameId = "klplaat",
+          players = self.players,
+          scores = { self.scores[1], self.scores[2] },
+          returnTo = "klplaat",
+          returnParams = { level = math.min(8, self.level + 1) }
+        }
+      )
     end
   end
 
@@ -985,7 +999,9 @@ function KlplaatGame:mousepressed(vx, vy, button)
         if currentColor == self.greyColor then
           self.scores[self.activePlayer] = self.scores[self.activePlayer] + REGION_POINTS
         end
-        self:_floodFill(imgX, imgY, pal)
+        if self:_floodFill(imgX, imgY, pal) and self:_isPictureComplete() then
+          self:_completeLevel()
+        end
       else
         self.app.audio:playSfx("fout2")
         self.scores[self.activePlayer] = math.max(0, self.scores[self.activePlayer] - 1)
@@ -1005,15 +1021,7 @@ function KlplaatGame:mousepressed(vx, vy, button)
 
   if self:_isInClock(vx, vy) then
     if self:_isPictureComplete() then
-      self.completed = true
-      self:_setOpnieuwEnabled(false)
-      if not self.selfMode and self.players == 1 then
-        self.scores[1] = self.scores[1] + self.timers[1]
-        self.phase = "bonus_wait"
-        self.phaseTimer = BONUS_WAIT_DELAY
-      else
-        self:_enterFinishing()
-      end
+      self:_completeLevel()
     else
       self.app.audio:playSfx("fout2")
     end

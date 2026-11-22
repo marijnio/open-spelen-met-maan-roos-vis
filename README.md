@@ -8,6 +8,12 @@ This project is an **independent open-source engine reimplementation** and is **
 
 No copyrighted game graphics, audio recordings, or original CD-ROM files are distributed in this repository. To play, you must supply and convert assets locally from your own legal copy of the original game.
 
+## Design Philosophy
+
+This open-source reimplementation aims to stay faithful to the original 1997 release's visuals, audio, word lists, scoring rules, and gameplay flow, while fixing obvious usability pitfalls and 1990s technical limitations where they get in the way of modern playability.
+
+For example, in the original Windows 3.1 release of **Kleurplaat**, checking whether every pixel had been painted was too slow to run on each brush click, so players had to click the small clock icon on the HUD to finish a completed picture—making it look as though nothing happened after coloring the final shape. In this version, guided mode automatically completes the level as soon as the last grey shape is filled in the right color, while free-color mode (grey sample picture) still finishes via the clock so players can keep recoloring as long as they like.
+
 ## Prerequisites
 
 - **LÖVE 11.5** (`love`)
