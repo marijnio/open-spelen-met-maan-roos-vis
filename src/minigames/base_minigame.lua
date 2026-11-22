@@ -59,21 +59,6 @@ function BaseMinigame:_buildChromeHotzones()
       end
     end,
   })
-
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 568,
-    y = 408,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      self:reset()
-    end,
-  })
 end
 
 function BaseMinigame:enter(params)

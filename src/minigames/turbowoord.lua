@@ -132,7 +132,6 @@ local ROUNDS_PER_LEVEL = 10
 local TIMER_MAX = 100
 local TIMER_TICK_INTERVAL = 0.375
 local TILE_REVEAL_INTERVAL = 0.30
-local ROUND_WAIT_DELAY = 0.90
 local FINISH_DELAY = 2.50
 local EAR_HOVER_DWELL = 1.125
 local WRONG_PENALTY = 10
@@ -218,7 +217,7 @@ function TurbowoordGame:_setOpnieuwEnabled(enabled)
   end
 end
 
-function TurbowoordGame:_addBaseChromeHotzones(onHelpClick)
+function TurbowoordGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
   self.hotzones:add({
     id = "terug",
     label = "Terug",
@@ -230,7 +229,11 @@ function TurbowoordGame:_addBaseChromeHotzones(onHelpClick)
     hoverImage = { "ui", "teru2" },
     onClick = function()
       self.app.audio:stop()
-      self.app.scenes:switch("hub")
+      if onTerugClick then
+        onTerugClick()
+      else
+        self.app.scenes:switch("hub")
+      end
     end,
   })
 
@@ -343,28 +346,11 @@ function TurbowoordGame:_startGame(players)
     else
       self.app.audio:clearAndPlay("jantje", "luisphp1")
     end
+  end, function()
+    self.app.audio:stop()
+    self:_enterSettings()
   end)
 
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 572,
-    y = 416,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      if self.phase == "timeout_finish" or self.phase == "finishing" then
-        return
-      end
-      self.app.audio:stop()
-      self:_enterSettings()
-    end,
-  })
-
-  -- Sync hover immediately so start_1p -> opnieuw at (572, 416) does not trigger hoverVo.
   self:_syncHover()
   self:_prepareRound()
   self:_startRoundReveal()
@@ -495,16 +481,10 @@ function TurbowoordGame:update(dt)
         if self.roundIndex > ROUNDS_PER_LEVEL then
           self:_enterFinishing()
         else
-          self.phase = "round_wait"
-          self.phaseTimer = ROUND_WAIT_DELAY
+          self:_prepareRound()
+          self:_startRoundReveal()
         end
       end
-    end
-  elseif self.phase == "round_wait" then
-    self.phaseTimer = self.phaseTimer - dt
-    if self.phaseTimer <= 0 then
-      self:_prepareRound()
-      self:_startRoundReveal()
     end
   elseif self.phase == "timeout_finish" then
     if not self.app.audio:isPlaying() then

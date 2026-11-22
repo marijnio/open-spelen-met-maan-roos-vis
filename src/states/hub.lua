@@ -7,7 +7,7 @@ local HubState = {}
 HubState.__index = HubState
 
 local MINIGAME_ZONES = {
-  { id = "memory",     label = "Onthouden maar",  x = 126, y = 43,  w = 133, h = 80,  head = "h6", hoverVo = { "jantje", "onthmaar" } },
+  { id = "memory",     label = "Onthouden maar",  x = 126, y = 49,  w = 133, h = 75,  head = "h6", hoverVo = { "jantje", "onthmaar" } },
   { id = "electro",    label = "Woordje plaatje", x = 151, y = 124, w = 71,  h = 106, head = "h7", hoverVo = { "jantje", "wrdpltje" } },
   { id = "draaiom",    label = "Draai maar om",   x = 350, y = 84,  w = 112, h = 72,  head = "h3", hoverVo = { "jantje", "drmaarom" } },
   { id = "klplaat",    label = "Kleurplaat",      x = 405, y = 157, w = 111, h = 79,  head = "h2", hoverVo = { "jantje", "klplaat"  } },
@@ -39,15 +39,25 @@ function HubState:enter()
       onHoverEnter = function()
         self.headSprite = cfg.head
       end,
-      onHoverLeave = function()
-        self.headSprite = "h1"
-      end,
       onClick = function()
         self.app.audio:stop()
         self.app.scenes:switch(cfg.id)
       end,
     })
   end
+
+  self.hotzones:add({
+    id = "car",
+    label = "Auto",
+    x = 132,
+    y = 7,
+    w = 120,
+    h = 42,
+    onClick = function()
+      self.app.audio:stop()
+      self.app.audio:playSfx("toeter")
+    end,
+  })
 
   self.hotzones:add({
     id = "highscore",
@@ -57,9 +67,6 @@ function HubState:enter()
     w = 84,
     h = 159,
     hoverVo = { "jantje", "top5" },
-    onHoverEnter = function()
-      self.headSprite = "h1"
-    end,
     onClick = function()
       self.app.audio:stop()
       self.app.scenes:switch("highscore", { returnTo = "hub" })
@@ -90,9 +97,8 @@ function HubState:enter()
     h = 60,
     normalImage = { "ui", "help" },
     hoverImage = { "ui", "hel2" },
-    hoverVo = { "jantje", "spgdhelp" },
     onClick = function()
-      self.app.audio:clearAndPlay("jantje", "openhelp")
+      self.app.audio:clearAndPlay("jantje", "spgdhelp")
     end,
   })
 
@@ -107,6 +113,7 @@ end
 
 function HubState:exit()
   self.hotzones:clear()
+  self.app.audio:stop()
 end
 
 function HubState:update(_dt)

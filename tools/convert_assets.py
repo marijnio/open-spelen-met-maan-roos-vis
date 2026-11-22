@@ -115,6 +115,52 @@ def inspect_bmp(bmp_path: Path) -> tuple[int, int, bool]:
     return (width, abs_h, has_magenta)
 
 
+def extract_exe_bitmaps(exe_path: Path, out_dir: Path, images_map: dict[str, dict[str, str]]) -> None:
+    """Extract embedded Windows 3.1 RT_BITMAP dialog buttons (knopan, knopok) from SMRV.EXE."""
+    if not exe_path.is_file():
+        return
+    data = exe_path.read_bytes()
+    if len(data) < 0x40 or data[:2] != b"MZ":
+        return
+    ne_off = struct.unpack("<H", data[0x3C:0x3E])[0]
+    if ne_off + 0x26 > len(data) or data[ne_off : ne_off + 2] != b"NE":
+        return
+    res_tab_off = ne_off + struct.unpack("<H", data[ne_off + 0x24 : ne_off + 0x26])[0]
+    align_shift = struct.unpack("<H", data[res_tab_off : res_tab_off + 2])[0]
+    curr = res_tab_off + 2
+    bitmap_entries: list[tuple[int, int]] = []
+    while curr + 8 <= len(data):
+        type_id = struct.unpack("<H", data[curr : curr + 2])[0]
+        if type_id == 0:
+            break
+        count = struct.unpack("<H", data[curr + 2 : curr + 4])[0]
+        is_bitmap = (type_id == 0x8002)
+        curr += 8
+        for _ in range(count):
+            if curr + 8 > len(data):
+                break
+            offset, length = struct.unpack("<HH", data[curr : curr + 4])
+            if is_bitmap:
+                bitmap_entries.append((offset << align_shift, length << align_shift))
+            curr += 12
+
+    for idx, (pos, length) in enumerate(bitmap_entries[:2]):
+        dib = data[pos : pos + length]
+        if len(dib) < 16:
+            continue
+        bi_bit_count = struct.unpack("<H", dib[14:16])[0]
+        pal_size = (1 << bi_bit_count) * 4 if bi_bit_count <= 8 else 0
+        file_hdr = b"BM" + struct.pack("<IHHI", 14 + len(dib), 0, 0, 14 + 40 + pal_size)
+        bmp_bytes = file_hdr + dib
+        name = "knopan" if idx == 0 else "knopok"
+        dst = out_dir / "images" / "ui" / f"{name}.png"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        cmd = ["magick", "-", f"PNG32:{dst}"]
+        subprocess.run(cmd, input=bmp_bytes, check=True)
+        rel_lua = dst.relative_to(out_dir).as_posix()
+        images_map.setdefault("ui", {})[name] = rel_lua
+
+
 def convert_bmp_task(task: tuple[Path, Path, bool]) -> tuple[Path, bool]:
     src, dst, chroma_magenta = task
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -294,6 +340,17 @@ def main(argv: list[str] | None = None) -> int:
                 magenta_sprites.append(dst.name)
         for f in concurrent.futures.as_completed(aud_futs):
             f.result()
+
+    # Extract dialog button bitmaps (knopan, knopok) from SMRV.EXE if present
+    exe_candidates = [
+        sys_dir.parent / "SMRV.EXE",
+        sys_dir / "SMRV.EXE",
+        DEFAULT_SOURCE.parent / "SMRV.EXE",
+    ]
+    for exe_candidate in exe_candidates:
+        if exe_candidate.is_file():
+            extract_exe_bitmaps(exe_candidate, out_dir, images_map)
+            break
 
     manifest_path = out_dir / "manifest.lua"
     write_manifest(manifest_path, images_map, audio_map, pending_bwv)

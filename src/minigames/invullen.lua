@@ -231,7 +231,7 @@ function InvullenGame:_setOpnieuwEnabled(enabled)
   end
 end
 
-function InvullenGame:_addBaseChromeHotzones(onHelpClick)
+function InvullenGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
   self.hotzones:add({
     id = "terug",
     label = "Terug",
@@ -243,7 +243,11 @@ function InvullenGame:_addBaseChromeHotzones(onHelpClick)
     hoverImage = { "ui", "teru2" },
     onClick = function()
       self.app.audio:stop()
-      self.app.scenes:switch("hub")
+      if onTerugClick then
+        onTerugClick()
+      else
+        self.app.scenes:switch("hub")
+      end
     end,
   })
 
@@ -346,24 +350,10 @@ function InvullenGame:_startGame(players)
   self.hotzones:clear()
   self:_addBaseChromeHotzones(function()
     self.app.audio:clearAndPlay("jantje", "invsphp1")
+  end, function()
+    self:_enterSettings()
   end)
 
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 572,
-    y = 416,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      self:_triggerOpnieuw()
-    end,
-  })
-
-  -- Sync hover immediately so start_1p -> opnieuw at (572, 416) does not trigger hoverVo.
   self:_syncHover()
   self:_prepareRound()
   self:_startRoundReveal()

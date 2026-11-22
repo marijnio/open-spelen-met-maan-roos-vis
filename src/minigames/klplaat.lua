@@ -255,7 +255,7 @@ function KlplaatGame:_setOpnieuwEnabled(enabled)
   end
 end
 
-function KlplaatGame:_addBaseChromeHotzones(onHelpClick)
+function KlplaatGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
   self.hotzones:add({
     id = "terug",
     label = "Terug",
@@ -267,7 +267,11 @@ function KlplaatGame:_addBaseChromeHotzones(onHelpClick)
     hoverImage = { "ui", "teru2" },
     onClick = function()
       self.app.audio:stop()
-      self.app.scenes:switch("hub")
+      if onTerugClick then
+        onTerugClick()
+      else
+        self.app.scenes:switch("hub")
+      end
     end
   })
 
@@ -526,24 +530,10 @@ function KlplaatGame:_startGame(players)
   self.hotzones:clear()
   self:_addBaseChromeHotzones(function()
     self.app.audio:clearAndPlay("jantje", "klpsphp1")
+  end, function()
+    self:_enterSettings()
   end)
 
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 572,
-    y = 416,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      self:_triggerOpnieuw()
-    end
-  })
-
-  -- Sync hover immediately so start_1p -> opnieuw at (572, 416) does not trigger hoverVo.
   self:_syncHover()
 
   local lvlData = self:_currentLevel()

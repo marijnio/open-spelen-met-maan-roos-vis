@@ -241,7 +241,7 @@ function MemoryGame:_startGame(players)
     hoverImage = { "ui", "teru2" },
     onClick = function()
       self.app.audio:stop()
-      self.app.scenes:switch("hub")
+      self:_enterSettings()
     end,
   })
 
@@ -256,21 +256,6 @@ function MemoryGame:_startGame(players)
     hoverImage = { "ui", "hel2" },
     onClick = function()
       self.app.audio:clearAndPlay("jantje", self:_helpVoForLevel())
-    end,
-  })
-
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 572,
-    y = 416,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      self:_triggerOpnieuw()
     end,
   })
 end

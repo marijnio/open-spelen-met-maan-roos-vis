@@ -6,10 +6,47 @@ local HotzoneManager = require("src.core.hotzone")
 local StartMenuState = {}
 StartMenuState.__index = StartMenuState
 
-local DIALOG_X = 130
-local DIALOG_Y = 165
-local DIALOG_W = 380
-local DIALOG_H = 150
+local DIALOG_W = 304
+local DIALOG_H = 160
+local DIALOG_X = math.floor((640 - DIALOG_W) / 2) -- 168
+local DIALOG_Y = math.floor((480 - DIALOG_H) / 2) -- 160
+
+local BTN_W = 72
+local BTN_H = 52
+local BTN_Y = DIALOG_Y + DIALOG_H - 14 - BTN_H -- 254
+local BTN_LEFT_X = DIALOG_X + 14 -- 182
+local BTN_RIGHT_X = DIALOG_X + DIALOG_W - 14 - BTN_W -- 386
+
+local function drawWinButton(x, y, w, h, iconKey, isHovered)
+  -- Outer 1px black border
+  love.graphics.setColor(0, 0, 0, 1)
+  love.graphics.rectangle("line", x + 0.5, y + 0.5, w - 1, h - 1)
+
+  -- Button face background (standard Windows 3.1 grey)
+  love.graphics.setColor(0.75, 0.75, 0.75, 1)
+  love.graphics.rectangle("fill", x + 1, y + 1, w - 2, h - 2)
+
+  -- 3D Bevel
+  -- Top and left highlight (white)
+  love.graphics.setColor(1, 1, 1, 1)
+  love.graphics.line(x + 1, y + 1, x + w - 2, y + 1)
+  love.graphics.line(x + 1, y + 1, x + 1, y + h - 2)
+
+  -- Bottom and right shadow (dark gray)
+  love.graphics.setColor(0.5, 0.5, 0.5, 1)
+  love.graphics.line(x + 1, y + h - 2, x + w - 1, y + h - 2)
+  love.graphics.line(x + w - 2, y + 1, x + w - 2, y + h - 1)
+
+  -- Icon centered on button face
+  local icon = Assets.getImage("ui", iconKey)
+  if icon then
+    local iw, ih = icon:getDimensions()
+    local ix = x + math.floor((w - iw) * 0.5)
+    local iy = y + math.floor((h - ih) * 0.5)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(icon, ix, iy)
+  end
+end
 
 function StartMenuState.new(app)
   local self = setmetatable({}, StartMenuState)
@@ -17,6 +54,8 @@ function StartMenuState.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.popupHotzones = HotzoneManager.new(app.audio)
   self.showQuitPopup = false
+  self.isExiting = false
+  self.exitTimer = 0
   return self
 end
 
@@ -24,6 +63,7 @@ function StartMenuState:_buildMainHotzones()
   self.hotzones:clear()
 
   -- Bottom-left: Stop button -> Quit confirmation popup
+  -- No hoverVo here: voice sample plays when the confirmation menu actually opens
   self.hotzones:add({
     id = "stop",
     label = "Stoppen",
@@ -33,7 +73,6 @@ function StartMenuState:_buildMainHotzones()
     h = 60,
     normalImage = { "ui", "stop" },
     hoverImage = { "ui", "sto2" },
-    hoverVo = { "jantje", "stop" },
     onClick = function()
       self:openQuitPopup()
     end,
@@ -76,35 +115,34 @@ function StartMenuState:openQuitPopup()
   self.showQuitPopup = true
   self.popupHotzones:clear()
 
-  self.popupHotzones:add({
-    id = "quit_yes",
-    label = "Ja",
-    x = 225,
-    y = 235,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "okee" },
-    hoverImage = { "ui", "oke2" },
-    onClick = function()
-      love.event.quit()
-    end,
-  })
-
+  -- Left button: Cancel (Red X - knopan) -> close dialog
   self.popupHotzones:add({
     id = "quit_no",
     label = "Nee",
-    x = 355,
-    y = 235,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "terug" },
-    hoverImage = { "ui", "teru2" },
+    x = BTN_LEFT_X,
+    y = BTN_Y,
+    w = BTN_W,
+    h = BTN_H,
     onClick = function()
       self:closeQuitPopup()
     end,
   })
 
-  self.app.audio:clearAndPlay("jantje", "stopbeve")
+  -- Right button: Confirm quit (Green OK - knopok) -> show aftitel and exit
+  self.popupHotzones:add({
+    id = "quit_yes",
+    label = "Ja",
+    x = BTN_RIGHT_X,
+    y = BTN_Y,
+    w = BTN_W,
+    h = BTN_H,
+    onClick = function()
+      self:confirmQuit()
+    end,
+  })
+
+  -- Voiceover sample starts playing when you actually open the menu:
+  self.app.audio:clearAndPlay("jantje", "stop")
 end
 
 function StartMenuState:closeQuitPopup()
@@ -113,19 +151,40 @@ function StartMenuState:closeQuitPopup()
   self.app.audio:stop()
 end
 
+function StartMenuState:confirmQuit()
+  self.showQuitPopup = false
+  self.popupHotzones:clear()
+  self.hotzones:clear()
+  self.isExiting = true
+  self.exitTimer = 0
+  self.app.audio:stopMusic()
+  self.app.audio:clearAndPlay("jantje", "stopbeve")
+end
+
 function StartMenuState:enter()
+  self.isExiting = false
+  self.exitTimer = 0
   self.showQuitPopup = false
   self:_buildMainHotzones()
 end
 
 function StartMenuState:exit()
   self.showQuitPopup = false
+  self.isExiting = false
   self.hotzones:clear()
   self.popupHotzones:clear()
   self.app.audio:stopMusic()
 end
 
-function StartMenuState:update(_dt)
+function StartMenuState:update(dt)
+  if self.isExiting then
+    self.exitTimer = self.exitTimer + dt
+    if self.exitTimer >= 2.6 or not self.app.audio:isPlaying() then
+      love.event.quit()
+    end
+    return
+  end
+
   local vx, vy = self.app:getVirtualPointer()
   if self.showQuitPopup then
     self.popupHotzones:update(vx, vy, self.app.isTouchMode)
@@ -135,37 +194,56 @@ function StartMenuState:update(_dt)
 end
 
 function StartMenuState:_drawQuitPopup()
-  love.graphics.setColor(0, 0, 0, 0.55)
-  love.graphics.rectangle("fill", 0, 0, 640, 480)
+  -- Window frame border: 3px light blue / cyan
+  love.graphics.setColor(0.65, 0.79, 0.94, 1)
+  for b = 0, 2 do
+    love.graphics.rectangle("line", DIALOG_X + b + 0.5, DIALOG_Y + b + 0.5, DIALOG_W - 1 - 2 * b, DIALOG_H - 1 - 2 * b)
+  end
 
-  -- Panel background & border
-  love.graphics.setColor(0.97, 0.95, 0.88, 1)
-  love.graphics.rectangle("fill", DIALOG_X, DIALOG_Y, DIALOG_W, DIALOG_H, 8, 8)
-  love.graphics.setColor(0.2, 0.2, 0.2, 1)
-  love.graphics.setLineWidth(3)
-  love.graphics.rectangle("line", DIALOG_X, DIALOG_Y, DIALOG_W, DIALOG_H, 8, 8)
-  love.graphics.setLineWidth(1)
+  -- Red title bar
+  love.graphics.setColor(0.92, 0.05, 0.05, 1)
+  love.graphics.rectangle("fill", DIALOG_X + 3, DIALOG_Y + 3, DIALOG_W - 6, 22)
 
-  -- Prompt text
-  love.graphics.setColor(0.12, 0.12, 0.12, 1)
+  -- White centered title bar text
+  love.graphics.setColor(1, 1, 1, 1)
+  love.graphics.printf("Stoppen!", DIALOG_X + 3, DIALOG_Y + 7, DIALOG_W - 6, "center")
+
+  -- Light yellow client area background
+  love.graphics.setColor(1.0, 1.0, 0.60, 1)
+  love.graphics.rectangle("fill", DIALOG_X + 3, DIALOG_Y + 25, DIALOG_W - 6, DIALOG_H - 28)
+
+  -- Left-aligned prompt text
+  love.graphics.setColor(0, 0, 0, 1)
   love.graphics.printf(
-    "Wil je 'Spelen met maan roos vis' echt verlaten?",
-    DIALOG_X + 16,
-    DIALOG_Y + 22,
-    DIALOG_W - 32,
-    "center"
+    "Wil je 'Spelen met maan roos vis'\necht verlaten?",
+    DIALOG_X + 18,
+    DIALOG_Y + 36,
+    DIALOG_W - 36,
+    "left"
   )
 
-  -- Ja / Nee modal buttons
-  self.popupHotzones:draw(self.app.debugHotzones)
+  -- Left button: Cancel (Red X)
+  drawWinButton(BTN_LEFT_X, BTN_Y, BTN_W, BTN_H, "knopan", self.popupHotzones.hoveredId == "quit_no")
 
-  love.graphics.setColor(0.15, 0.15, 0.15, 1)
-  love.graphics.printf("Ja", 225, 297, 60, "center")
-  love.graphics.printf("Nee", 355, 297, 60, "center")
+  -- Right button: OK (Green OK)
+  drawWinButton(BTN_RIGHT_X, BTN_Y, BTN_W, BTN_H, "knopok", self.popupHotzones.hoveredId == "quit_yes")
+
+  self.popupHotzones:draw(self.app.debugHotzones)
   love.graphics.setColor(1, 1, 1, 1)
 end
 
 function StartMenuState:draw()
+  if self.isExiting then
+    local aftitel = Assets.getImage("screens", "aftitel")
+    if aftitel then
+      love.graphics.setColor(1, 1, 1, 1)
+      love.graphics.draw(aftitel, 0, 0)
+    else
+      love.graphics.clear(0, 0, 0, 1)
+    end
+    return
+  end
+
   local bg = Assets.getImage("screens", "ts")
   if bg then
     love.graphics.setColor(1, 1, 1, 1)
@@ -180,6 +258,11 @@ function StartMenuState:draw()
 end
 
 function StartMenuState:mousepressed(vx, vy, button)
+  if self.isExiting then
+    love.event.quit()
+    return
+  end
+
   if self.showQuitPopup then
     self.popupHotzones:mousepressed(vx, vy, button)
   else
@@ -188,11 +271,20 @@ function StartMenuState:mousepressed(vx, vy, button)
 end
 
 function StartMenuState:keypressed(key)
+  if self.isExiting then
+    love.event.quit()
+    return
+  end
+
   if key == "escape" then
     if self.showQuitPopup then
       self:closeQuitPopup()
     else
       self:openQuitPopup()
+    end
+  elseif key == "return" or key == "space" then
+    if self.showQuitPopup then
+      self:confirmQuit()
     end
   end
 end

@@ -34,10 +34,13 @@ function AboutState:enter()
       self:_goBack()
     end,
   })
+
+  self.app.audio:clearAndPlay("jantje", "inprjan")
 end
 
 function AboutState:exit()
   self.hotzones:clear()
+  self.app.audio:stop()
 end
 
 function AboutState:update(_dt)

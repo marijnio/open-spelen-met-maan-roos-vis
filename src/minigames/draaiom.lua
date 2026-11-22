@@ -336,7 +336,7 @@ function DraaiomGame:_setOpnieuwEnabled(enabled)
   end
 end
 
-function DraaiomGame:_addBaseChromeHotzones(helpVoProvider)
+function DraaiomGame:_addBaseChromeHotzones(helpVoProvider, onTerug)
   self.hotzones:add({
     id = "terug",
     label = "Terug",
@@ -348,7 +348,11 @@ function DraaiomGame:_addBaseChromeHotzones(helpVoProvider)
     hoverImage = { "ui", "teru2" },
     onClick = function()
       self.app.audio:stop()
-      self.app.scenes:switch("hub")
+      if onTerug then
+        onTerug()
+      else
+        self.app.scenes:switch("hub")
+      end
     end,
   })
 
@@ -449,24 +453,10 @@ function DraaiomGame:_startGame(players)
   self.hotzones:clear()
   self:_addBaseChromeHotzones(function()
     return "drasphp1"
+  end, function()
+    self:_enterSettings()
   end)
 
-  self.hotzones:add({
-    id = "opnieuw",
-    label = "Opnieuw",
-    x = 572,
-    y = 416,
-    w = 60,
-    h = 60,
-    normalImage = { "ui", "opnieuw" },
-    hoverImage = { "ui", "opnieu2" },
-    hoverVo = { "jantje", "opnieuw" },
-    onClick = function()
-      self:_triggerOpnieuw()
-    end,
-  })
-
-  -- Sync hover immediately so start_1p -> opnieuw at (572, 416) does not trigger hoverVo.
   self:_syncHover()
   self:_scrambleInitial()
 end
