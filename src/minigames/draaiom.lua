@@ -1,6 +1,7 @@
 -- Mini-game 3: Draai maar om (Draaiom)
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local DraaiomGame = {}
@@ -171,10 +172,9 @@ function DraaiomGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
-  local okWait, waitCur = pcall(love.mouse.getSystemCursor, "wait")
-  self.waitCursor = (okWait and waitCur) or self.arrowCursor
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
+  self.waitCursor = Cursor.getSystem("wait") or self.arrowCursor
 
   self.levelFont = love.graphics.newFont(16)
   self.badgeFont = love.graphics.newFont(12)
@@ -325,7 +325,7 @@ function DraaiomGame:_scrambleAfterSolve(solvedImg, isDuplicate)
 end
 
 function DraaiomGame:_syncHover()
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 end
 
@@ -523,7 +523,7 @@ end
 
 function DraaiomGame:exit()
   self.hotzones:clear()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function DraaiomGame:_updateCursor(vx, vy)
@@ -532,15 +532,15 @@ function DraaiomGame:_updateCursor(vx, vy)
   end
   if self.phase == "playing" then
     local onBoard = pointInRect(vx, vy, BOARD_X, BOARD_Y, BOARD_SIZE, BOARD_SIZE)
-    love.mouse.setCursor(onBoard and self.handCursor or self.arrowCursor)
+    Cursor.set(onBoard and self.handCursor or self.arrowCursor)
   elseif self.phase ~= "settings" then
-    love.mouse.setCursor(self.waitCursor)
+    Cursor.set(self.waitCursor)
   end
 end
 
 function DraaiomGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase ~= "settings" then
     for _, tile in ipairs(self.tiles) do

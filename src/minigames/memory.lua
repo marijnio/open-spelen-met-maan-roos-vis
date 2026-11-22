@@ -1,6 +1,7 @@
 -- Mini-game 1: Onthouden maar! (Memory)
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local MemoryGame = {}
@@ -70,8 +71,8 @@ function MemoryGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
 
   self.levelFont = love.graphics.newFont(16)
   self.badgeFont = love.graphics.newFont(12)
@@ -337,12 +338,12 @@ end
 
 function MemoryGame:exit()
   self.hotzones:clear()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function MemoryGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase == "playing" then
     for _, card in ipairs(self.cards) do
@@ -361,9 +362,9 @@ function MemoryGame:update(dt)
     if not self.hotzones.hoveredId then
       local idx = self:_cardIndexAt(vx, vy)
       if idx and self.cards[idx] and self.cards[idx].state == 0 then
-        love.mouse.setCursor(self.handCursor)
+        Cursor.set(self.handCursor)
       else
-        love.mouse.setCursor(self.arrowCursor)
+        Cursor.set(self.arrowCursor)
       end
     end
   elseif self.phase == "revealing" then

@@ -126,11 +126,11 @@ function StartMenuState:exit()
 end
 
 function StartMenuState:update(_dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   if self.showQuitPopup then
-    self.popupHotzones:update(vx, vy)
+    self.popupHotzones:update(vx, vy, self.app.isTouchMode)
   else
-    self.hotzones:update(vx, vy)
+    self.hotzones:update(vx, vy, self.app.isTouchMode)
   end
 end
 

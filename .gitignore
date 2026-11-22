@@ -35,3 +35,13 @@ tools/__pycache__/
 *.pyc
 .DS_Store
 *.log
+
+# Android & LÖVE packaging / build artifacts
+*.apk
+*.aab
+*.love
+*.keystore
+*.jks
+build/
+dist/
+love-android/

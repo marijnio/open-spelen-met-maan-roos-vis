@@ -1,6 +1,7 @@
 -- Clickable & hoverable rectangular hotzones with sprite swap, audio feedback, and F1 debug view.
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 
 local HotzoneManager = {}
 HotzoneManager.__index = HotzoneManager
@@ -10,15 +11,15 @@ function HotzoneManager.new(audioQueue)
   self.audioQueue = audioQueue
   self.zones = {}
   self.hoveredId = nil
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
   return self
 end
 
 function HotzoneManager:clear()
   self.zones = {}
   self.hoveredId = nil
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function HotzoneManager:add(zone)
@@ -64,16 +65,16 @@ function HotzoneManager:syncHover(vx, vy)
   local hit = self:findAt(vx, vy)
   self.hoveredId = hit and hit.id or nil
   if hit then
-    love.mouse.setCursor(self.handCursor)
+    Cursor.set(self.handCursor)
     if hit.onHoverEnter then
       hit.onHoverEnter(hit)
     end
   else
-    love.mouse.setCursor(self.arrowCursor)
+    Cursor.set(self.arrowCursor)
   end
 end
 
-function HotzoneManager:update(vx, vy)
+function HotzoneManager:update(vx, vy, suppressHoverAudio)
   local hit = self:findAt(vx, vy)
   local nextId = hit and hit.id or nil
 
@@ -88,8 +89,8 @@ function HotzoneManager:update(vx, vy)
     self.hoveredId = nextId
 
     if hit then
-      love.mouse.setCursor(self.handCursor)
-      if self.audioQueue then
+      Cursor.set(self.handCursor)
+      if self.audioQueue and not suppressHoverAudio then
         if hit.hoverSfx then
           self.audioQueue:playSfx(hit.hoverSfx)
         end
@@ -101,7 +102,7 @@ function HotzoneManager:update(vx, vy)
         hit.onHoverEnter(hit)
       end
     else
-      love.mouse.setCursor(self.arrowCursor)
+      Cursor.set(self.arrowCursor)
     end
   end
 end

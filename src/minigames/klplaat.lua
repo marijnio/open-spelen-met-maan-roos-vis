@@ -1,6 +1,7 @@
 -- Mini-game 4: Kleurplaat
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local KlplaatGame = {}
@@ -170,10 +171,9 @@ function KlplaatGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
-  local okWait, waitCur = pcall(love.mouse.getSystemCursor, "wait")
-  self.waitCursor = (okWait and waitCur) or self.arrowCursor
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
+  self.waitCursor = Cursor.getSystem("wait") or self.arrowCursor
   self.paintCursor = self:_createPaintCursor()
 
   self.levelFont = love.graphics.newFont(16)
@@ -216,6 +216,9 @@ function KlplaatGame.new(app)
 end
 
 function KlplaatGame:_createPaintCursor()
+  if not Cursor.isSupported() then
+    return nil
+  end
   local ok, data = pcall(love.image.newImageData, 32, 32)
   if not ok or not data then
     return self.handCursor
@@ -233,11 +236,7 @@ function KlplaatGame:_createPaintCursor()
       end
     end
   end
-  local okCur, cur = pcall(love.mouse.newCursor, data, 1, 30)
-  if okCur and cur then
-    return cur
-  end
-  return self.handCursor
+  return Cursor.newFromImageData(data, 1, 30) or self.handCursor
 end
 
 function KlplaatGame:_currentLevel()
@@ -245,7 +244,7 @@ function KlplaatGame:_currentLevel()
 end
 
 function KlplaatGame:_syncHover()
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 end
 
@@ -636,18 +635,18 @@ function KlplaatGame:_updateCursor(vx, vy)
   end
   if self.phase == "playing" then
     if pointInRect(vx, vy, PIC_X, PIC_Y, PIC_W, PIC_H) then
-      love.mouse.setCursor(self.paintCursor)
+      Cursor.set(self.paintCursor)
     elseif pointInRect(vx, vy, SAMPLE_X, SAMPLE_Y, SAMPLE_W, SAMPLE_H)
         or self:_paletteSlotAt(vx, vy) ~= nil
         or self:_isInClock(vx, vy) then
-      love.mouse.setCursor(self.handCursor)
+      Cursor.set(self.handCursor)
     else
-      love.mouse.setCursor(self.arrowCursor)
+      Cursor.set(self.arrowCursor)
     end
   elseif self.phase == "settings" then
-    love.mouse.setCursor(self.arrowCursor)
+    Cursor.set(self.arrowCursor)
   else
-    love.mouse.setCursor(self.waitCursor)
+    Cursor.set(self.waitCursor)
   end
 end
 
@@ -660,12 +659,12 @@ end
 function KlplaatGame:exit()
   self.hotzones:clear()
   self:_releaseCanvas()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function KlplaatGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase == "preview" then
     self.phaseTimer = self.phaseTimer - dt
@@ -678,7 +677,7 @@ function KlplaatGame:update(dt)
       self:_selectColor(1, true)
     end
   elseif self.phase == "playing" then
-    if not self.hotzones.hoveredId and pointInRect(vx, vy, SAMPLE_X, SAMPLE_Y, SAMPLE_W, SAMPLE_H) then
+    if not self.app.isTouchMode and not self.hotzones.hoveredId and pointInRect(vx, vy, SAMPLE_X, SAMPLE_Y, SAMPLE_W, SAMPLE_H) then
       if not self.sampleHoverSpoken then
         self.sampleHoverTime = self.sampleHoverTime + dt
         if self.sampleHoverTime >= SAMPLE_HOVER_DWELL and not self.app.audio:isPlaying() then

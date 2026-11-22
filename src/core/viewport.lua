@@ -43,7 +43,15 @@ function Viewport:resize(w, h)
   self.offsetY = math.floor((self.winH - drawH) * 0.5)
 end
 
+function Viewport:syncDimensions()
+  local w, h = love.graphics.getDimensions()
+  if w ~= self.winW or h ~= self.winH then
+    self:resize(w, h)
+  end
+end
+
 function Viewport:beginDraw()
+  self:syncDimensions()
   love.graphics.setCanvas(self.canvas)
   love.graphics.clear(0, 0, 0, 1)
   love.graphics.setColor(1, 1, 1, 1)

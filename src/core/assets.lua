@@ -109,7 +109,7 @@ function Assets.init()
     addCandidate(candidates, "local_config.lua", cfg.assets_dir, nil)
   end
 
-  addCandidate(candidates, "project assets/", "assets", "love")
+  addCandidate(candidates, "bundled / project assets/", "assets", "love")
 
   if love.filesystem and love.filesystem.getSaveDirectory then
     local saveAssets = love.filesystem.getSaveDirectory() .. "/assets"
@@ -168,7 +168,7 @@ function Assets:_warnOnce(key, message)
 end
 
 function Assets:_resolveSourceInput(relPath)
-  local cleanRel = relPath:gsub("^/+", "")
+  local cleanRel = relPath:gsub("\\", "/"):gsub("^/+", "")
   local fullPath = self.root .. "/" .. cleanRel
 
   if self.mode == "love" then

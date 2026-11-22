@@ -41,8 +41,8 @@ function AboutState:exit()
 end
 
 function AboutState:update(_dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 end
 
 function AboutState:draw()

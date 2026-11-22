@@ -36,6 +36,12 @@ local function drawBoldPrintf(text, x, y, limit, align)
   love.graphics.printf(text, x + 1, y, limit, align)
 end
 
+local function setVirtualKeyboard(enabled)
+  if love and love.keyboard and love.keyboard.setTextInput then
+    love.keyboard.setTextInput(enabled)
+  end
+end
+
 local function fitTextToWidth(font, text, maxWidth)
   if font:getWidth(text) <= maxWidth then
     return text
@@ -117,6 +123,7 @@ function HighScoreState:_enterEntryPhase()
   self.phase = "entry"
   self.activeField = self.qualified[1] and 1 or 2
   love.keyboard.setKeyRepeat(true)
+  setVirtualKeyboard(true)
   self.hotzones:clear()
 
   self.hotzones:add({
@@ -136,6 +143,7 @@ end
 
 function HighScoreState:_confirmEntry()
   love.keyboard.setKeyRepeat(false)
+  setVirtualKeyboard(false)
   if self.qualified[1] then
     HighScores.insert(self.gameId, self.names[1], self.scores[1])
   end
@@ -148,6 +156,7 @@ end
 function HighScoreState:_enterBoardPhase()
   self.phase = "board"
   love.keyboard.setKeyRepeat(false)
+  setVirtualKeyboard(false)
   self.hotzones:clear()
 
   self.hotzones:add({
@@ -172,13 +181,14 @@ end
 
 function HighScoreState:exit()
   love.keyboard.setKeyRepeat(false)
+  setVirtualKeyboard(false)
   self.hotzones:clear()
 end
 
 function HighScoreState:update(dt)
   self.blinkTimer = self.blinkTimer + dt
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 end
 
 function HighScoreState:_drawEntryField(field)
@@ -276,6 +286,7 @@ function HighScoreState:mousepressed(vx, vy, button)
         if vx >= BOX_X and vx <= (BOX_X + BOX_W) and vy >= by and vy <= (by + BOX_H) then
           self.activeField = field
           self.blinkTimer = 0
+          setVirtualKeyboard(true)
           return
         end
       end

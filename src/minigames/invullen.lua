@@ -1,6 +1,7 @@
 -- Mini-game 5: Invullen
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local InvullenGame = {}
@@ -163,10 +164,9 @@ function InvullenGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
-  local okWait, waitCur = pcall(love.mouse.getSystemCursor, "wait")
-  self.waitCursor = (okWait and waitCur) or self.arrowCursor
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
+  self.waitCursor = Cursor.getSystem("wait") or self.arrowCursor
 
   self.levelFont = love.graphics.newFont(16)
   self.badgeFont = love.graphics.newFont(12)
@@ -220,7 +220,7 @@ function InvullenGame:_prepareRound()
 end
 
 function InvullenGame:_syncHover()
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 end
 
@@ -424,7 +424,7 @@ end
 
 function InvullenGame:exit()
   self.hotzones:clear()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function InvullenGame:_isInWordBox(vx, vy)
@@ -447,17 +447,17 @@ function InvullenGame:_updateCursor(vx, vy)
   end
   if self.phase == "playing" then
     local onInteractive = self:_isInWordBox(vx, vy) or (self:_tileSlotAt(vx, vy) ~= nil)
-    love.mouse.setCursor(onInteractive and self.handCursor or self.arrowCursor)
+    Cursor.set(onInteractive and self.handCursor or self.arrowCursor)
   elseif self.phase == "settings" then
-    love.mouse.setCursor(self.arrowCursor)
+    Cursor.set(self.arrowCursor)
   else
-    love.mouse.setCursor(self.waitCursor)
+    Cursor.set(self.waitCursor)
   end
 end
 
 function InvullenGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase == "revealing_tiles" then
     self.phaseTimer = self.phaseTimer - dt

@@ -16,6 +16,8 @@ function AudioQueue.new()
   self.sfxVolume = 0.9
   self.music = nil
   self.musicVolume = 1.0
+  self.paused = false
+  self.pausedSources = {}
   return self
 end
 
@@ -117,9 +119,35 @@ end
 function AudioQueue:stopAll()
   self:stop()
   self:stopMusic()
+  self.pausedSources = {}
+end
+
+--- Pauses all active audio sources (used when the app loses focus or goes to background).
+function AudioQueue:pauseAll()
+  if self.paused then
+    return
+  end
+  self.paused = true
+  self.pausedSources = love.audio.pause() or {}
+end
+
+--- Resumes audio sources paused by pauseAll().
+function AudioQueue:resumeAll()
+  if not self.paused then
+    return
+  end
+  self.paused = false
+  if #self.pausedSources > 0 then
+    love.audio.play(self.pausedSources)
+  end
+  self.pausedSources = {}
 end
 
 function AudioQueue:update(dt)
+  if self.paused then
+    return
+  end
+
   if self.music and not self.music:isPlaying() then
     self.music = nil
   end

@@ -107,8 +107,8 @@ function BaseMinigame:playFeedback(isCorrect)
 end
 
 function BaseMinigame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
   if self.config.onUpdate then
     self.config.onUpdate(self, dt, vx, vy)
   end

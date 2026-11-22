@@ -96,7 +96,7 @@ function HubState:enter()
     end,
   })
 
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 
   if not self.app.hasGreetedInHub then
@@ -110,8 +110,8 @@ function HubState:exit()
 end
 
 function HubState:update(_dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 end
 
 function HubState:draw()

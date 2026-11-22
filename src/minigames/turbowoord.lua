@@ -1,6 +1,7 @@
 -- Mini-game 6: Luister maar (Turbowoord)
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local TurbowoordGame = {}
@@ -152,10 +153,9 @@ function TurbowoordGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
-  local okWait, waitCur = pcall(love.mouse.getSystemCursor, "wait")
-  self.waitCursor = (okWait and waitCur) or self.arrowCursor
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
+  self.waitCursor = Cursor.getSystem("wait") or self.arrowCursor
 
   self.levelFont = love.graphics.newFont(16)
   self.badgeFont = love.graphics.newFont(12)
@@ -207,7 +207,7 @@ function TurbowoordGame:_prepareRound()
 end
 
 function TurbowoordGame:_syncHover()
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 end
 
@@ -410,7 +410,7 @@ end
 
 function TurbowoordGame:exit()
   self.hotzones:clear()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function TurbowoordGame:_tileSlotAt(vx, vy)
@@ -430,17 +430,17 @@ function TurbowoordGame:_updateCursor(vx, vy)
   if self.phase == "playing" then
     local onInteractive = pointInRect(vx, vy, EAR_X, EAR_Y, EAR_W, EAR_H)
       or (self:_tileSlotAt(vx, vy) ~= nil)
-    love.mouse.setCursor(onInteractive and self.handCursor or self.arrowCursor)
+    Cursor.set(onInteractive and self.handCursor or self.arrowCursor)
   elseif self.phase == "settings" then
-    love.mouse.setCursor(self.arrowCursor)
+    Cursor.set(self.arrowCursor)
   else
-    love.mouse.setCursor(self.waitCursor)
+    Cursor.set(self.waitCursor)
   end
 end
 
 function TurbowoordGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase == "revealing_tiles" then
     self.phaseTimer = self.phaseTimer - dt
@@ -462,7 +462,7 @@ function TurbowoordGame:update(dt)
       end
     end
   elseif self.phase == "playing" then
-    if not self.hotzones.hoveredId and pointInRect(vx, vy, EAR_X, EAR_Y, EAR_W, EAR_H) then
+    if not self.app.isTouchMode and not self.hotzones.hoveredId and pointInRect(vx, vy, EAR_X, EAR_Y, EAR_W, EAR_H) then
       if not self.earHoverSpoken then
         self.earHoverTime = self.earHoverTime + dt
         if self.earHoverTime >= EAR_HOVER_DWELL and not self.app.audio:isPlaying() then

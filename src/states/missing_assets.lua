@@ -5,6 +5,13 @@ local Assets = require("src.core.assets")
 local MissingAssetsState = {}
 MissingAssetsState.__index = MissingAssetsState
 
+local RETRY_BTN = { x = 28, y = 436, w = 180, h = 30 }
+local QUIT_BTN = { x = 224, y = 436, w = 140, h = 30 }
+
+local function pointInRect(px, py, r)
+  return px >= r.x and px <= (r.x + r.w) and py >= r.y and py <= (r.y + r.h)
+end
+
 function MissingAssetsState.new(app)
   local self = setmetatable({}, MissingAssetsState)
   self.app = app
@@ -63,12 +70,34 @@ function MissingAssetsState:draw()
 
   if self.statusMessage then
     love.graphics.setColor(1, 0.55, 0.35, 1)
-    love.graphics.print(self.statusMessage, 28, 418)
+    love.graphics.print(self.statusMessage, 28, 414)
   end
 
-  love.graphics.setColor(0.75, 0.9, 1, 1)
-  love.graphics.print("[R] Opnieuw proberen     [Esc] Afsluiten", 28, 446)
+  local buttons = {
+    { rect = RETRY_BTN, text = "[R] Opnieuw proberen" },
+    { rect = QUIT_BTN, text = "[Esc] Afsluiten" },
+  }
+  for _, btn in ipairs(buttons) do
+    local r = btn.rect
+    love.graphics.setColor(0.22, 0.28, 0.38, 1)
+    love.graphics.rectangle("fill", r.x, r.y, r.w, r.h, 5, 5)
+    love.graphics.setColor(0.55, 0.72, 0.92, 1)
+    love.graphics.rectangle("line", r.x, r.y, r.w, r.h, 5, 5)
+    love.graphics.setColor(0.88, 0.94, 1, 1)
+    love.graphics.printf(btn.text, r.x, r.y + 8, r.w, "center")
+  end
   love.graphics.setColor(1, 1, 1, 1)
+end
+
+function MissingAssetsState:mousepressed(vx, vy, button)
+  if button ~= 1 then
+    return
+  end
+  if pointInRect(vx, vy, RETRY_BTN) then
+    self:retry()
+  elseif pointInRect(vx, vy, QUIT_BTN) then
+    love.event.quit()
+  end
 end
 
 function MissingAssetsState:keypressed(key)

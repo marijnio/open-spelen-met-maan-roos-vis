@@ -1,6 +1,7 @@
 -- Mini-game 2: Woordje plaatje (Electro)
 
 local Assets = require("src.core.assets")
+local Cursor = require("src.core.cursor")
 local HotzoneManager = require("src.core.hotzone")
 
 local ElectroGame = {}
@@ -94,8 +95,8 @@ function ElectroGame.new(app)
   self.hotzones = HotzoneManager.new(app.audio)
   self.handlesEscape = true
 
-  self.handCursor = love.mouse.getSystemCursor("hand")
-  self.arrowCursor = love.mouse.getSystemCursor("arrow")
+  self.handCursor = Cursor.getSystem("hand")
+  self.arrowCursor = Cursor.getSystem("arrow")
 
   self.levelFont = love.graphics.newFont(16)
   self.badgeFont = love.graphics.newFont(12)
@@ -121,7 +122,7 @@ function ElectroGame.new(app)
 end
 
 function ElectroGame:_syncHover()
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  local vx, vy = self.app:getVirtualPointer()
   self.hotzones:syncHover(vx, vy)
 end
 
@@ -366,12 +367,12 @@ end
 
 function ElectroGame:exit()
   self.hotzones:clear()
-  love.mouse.setCursor(self.arrowCursor)
+  Cursor.set(self.arrowCursor)
 end
 
 function ElectroGame:update(dt)
-  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
-  self.hotzones:update(vx, vy)
+  local vx, vy = self.app:getVirtualPointer()
+  self.hotzones:update(vx, vy, self.app.isTouchMode)
 
   if self.phase ~= "settings" then
     for _, card in ipairs(self.cards) do
@@ -397,11 +398,11 @@ function ElectroGame:update(dt)
       local onTop = self.topShowing and self:_isInTopTile(vx, vy)
       local idx = self:_cardIndexAt(vx, vy)
       local onCard = idx and self.cards[idx] and self.cards[idx].state == 1
-      love.mouse.setCursor((onTop or onCard) and self.handCursor or self.arrowCursor)
+      Cursor.set((onTop or onCard) and self.handCursor or self.arrowCursor)
     end
   else
     if not self.hotzones.hoveredId and self.phase ~= "settings" then
-      love.mouse.setCursor(self.arrowCursor)
+      Cursor.set(self.arrowCursor)
     end
 
     if self.phase == "next_delay" then

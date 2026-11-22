@@ -1,6 +1,7 @@
 function love.conf(t)
   t.identity = "spelen-met-maan-roos-vis"
   t.version = "11.5"
+  t.externalstorage = true
 
   t.window.title = "Spelen met Maan Roos Vis"
   t.window.width = 1280
@@ -13,6 +14,6 @@ function love.conf(t)
 
   t.modules.joystick = false
   t.modules.physics = false
-  t.modules.touch = false
+  t.modules.touch = true
   t.modules.video = false
 end

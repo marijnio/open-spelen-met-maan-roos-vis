@@ -67,3 +67,31 @@ love .
 - `F2`: Toggle `nearest` / `linear` scaling filter
 - `F11`: Toggle fullscreen
 - `Escape`: Back to previous menu / open quit confirmation on Start Menu
+
+## Building for Android Tablets (`love-android`)
+
+You can package your own local copy into a standalone debug APK for an Android tablet using [love-android](https://github.com/love2d/love-android) (matching LÖVE 11.5). No APKs, `.love` bundles, or copyrighted assets are committed to Git (`build/`, `*.love`, `*.apk`, `love-android/`, and `assets/` are all gitignored).
+
+1. **Prerequisites:** Java JDK (17 recommended), Android SDK (`ANDROID_HOME`), `zip`, and a local clone of `love-android` checked out at the `11.5` tag/branch.
+2. **Convert assets locally** (if not done already):
+   ```sh
+   python3 tools/convert_assets.py --source /path/to/CD/SYS --output assets
+   ```
+3. **Create the `.love` bundle:**
+   ```sh
+   ./scripts/build_android.sh
+   ```
+   This packages `main.lua`, `conf.lua`, `src/`, and your local `assets/` into `build/game.love` (excludes `local_config.lua` and `backup/`).
+4. **Embed in `love-android` & compile the APK:**
+   Copy `build/game.love` into your local `love-android` checkout (or let the script do both steps):
+   ```sh
+   ./scripts/build_android.sh --love-android /path/to/love-android --build-apk
+   ```
+   Manually, that corresponds to copying `build/game.love` to `app/src/embed/assets/game.love` (or `app/src/main/assets/game.love` depending on your `love-android` flavor) and running:
+   ```sh
+   cd /path/to/love-android
+   ./gradlew assembleEmbedNoRecordDebug
+   ```
+   *(Tip: in `love-android`'s `AndroidManifest.xml`, set `android:screenOrientation="sensorLandscape"` on `GameActivity` so the 4:3 canvas stays in tablet landscape mode.)*
+5. **Optional side-load mode (code-only `.love`):**
+   If you prefer keeping media separate from the APK, run `./scripts/build_android.sh --no-assets` and copy your `assets/` folder into the app's external save directory on the tablet (`/sdcard/Android/data/<package>/files/save/spelen-met-maan-roos-vis/assets/`).
