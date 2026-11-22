@@ -95,6 +95,14 @@ function HubState:enter()
       self.app.audio:clearAndPlay("jantje", "openhelp")
     end,
   })
+
+  local vx, vy = self.app.viewport:screenToVirtual(love.mouse.getPosition())
+  self.hotzones:syncHover(vx, vy)
+
+  if not self.app.hasGreetedInHub then
+    self.app.hasGreetedInHub = true
+    self.app.audio:clearAndPlay("jantje", "hoi")
+  end
 end
 
 function HubState:exit()

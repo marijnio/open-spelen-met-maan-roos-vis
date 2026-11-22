@@ -1,5 +1,5 @@
 -- Intro animation state: plays VIDEO frames on black background with ZWT music,
--- shows the Radarsoft logo in the bottom-right at the end, and waits for ZWT to finish (or click to skip).
+-- shows the Radarsoft logo in the bottom-right at the end, then transitions to the start menu while ZWT continues playing.
 
 local Assets = require("src.core.assets")
 
@@ -14,6 +14,8 @@ function IntroState.new(app)
   self.timer = 0
   self.frameDuration = 0.10 -- ~10 fps
   self.doneAnimating = false
+  self.postHoldTimer = 0
+  self.postHoldDuration = 1.5
   return self
 end
 
@@ -21,15 +23,15 @@ function IntroState:enter()
   self.frames = Assets.listKeys("images", "video")
   self.frameIndex = 1
   self.timer = 0
+  self.postHoldTimer = 0
   self.doneAnimating = (#self.frames == 0)
-  self.app.audio:clearAndPlay("system", "zwt")
+  self.app.audio:playMusic("system", "zwt")
 end
 
 function IntroState:exit()
 end
 
 function IntroState:_goToStartMenu()
-  self.app.audio:stop()
   self.app.scenes:switch("start_menu")
 end
 
@@ -42,11 +44,15 @@ function IntroState:update(dt)
         self.frameIndex = self.frameIndex + 1
       else
         self.doneAnimating = true
+        self.postHoldTimer = 0
         break
       end
     end
-  elseif self.doneAnimating and not self.app.audio:isPlaying() then
-    self:_goToStartMenu()
+  elseif self.doneAnimating then
+    self.postHoldTimer = self.postHoldTimer + dt
+    if self.postHoldTimer >= self.postHoldDuration then
+      self:_goToStartMenu()
+    end
   end
 end
 

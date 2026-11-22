@@ -60,6 +60,19 @@ function HotzoneManager:_resolveImage(spec)
   return spec
 end
 
+function HotzoneManager:syncHover(vx, vy)
+  local hit = self:findAt(vx, vy)
+  self.hoveredId = hit and hit.id or nil
+  if hit then
+    love.mouse.setCursor(self.handCursor)
+    if hit.onHoverEnter then
+      hit.onHoverEnter(hit)
+    end
+  else
+    love.mouse.setCursor(self.arrowCursor)
+  end
+end
+
 function HotzoneManager:update(vx, vy)
   local hit = self:findAt(vx, vy)
   local nextId = hit and hit.id or nil

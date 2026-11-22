@@ -122,6 +122,7 @@ function StartMenuState:exit()
   self.showQuitPopup = false
   self.hotzones:clear()
   self.popupHotzones:clear()
+  self.app.audio:stopMusic()
 end
 
 function StartMenuState:update(_dt)

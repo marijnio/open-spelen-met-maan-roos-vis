@@ -1,4 +1,4 @@
--- Sequential voice-over & phoneme playback queue plus non-blocking SFX channel.
+-- Sequential voice-over & phoneme playback queue, independent music channel, and non-blocking SFX channel.
 
 local Assets = require("src.core.assets")
 
@@ -14,6 +14,8 @@ function AudioQueue.new()
   self.pendingGap = 0
   self.voVolume = 1.0
   self.sfxVolume = 0.9
+  self.music = nil
+  self.musicVolume = 1.0
   return self
 end
 
@@ -86,7 +88,42 @@ function AudioQueue:isPlaying()
   return (self.current ~= nil and self.current:isPlaying()) or (#self.queue > 0) or (self.gapTimer > 0)
 end
 
+function AudioQueue:playMusic(category, name, opts)
+  opts = opts or {}
+  self:stopMusic()
+  local src = Assets.getAudio(category, name, opts.sourceType or "stream")
+  if not src then
+    return false
+  end
+  src:stop()
+  src:setLooping(opts.loop == true)
+  src:setVolume(opts.volume or self.musicVolume)
+  src:play()
+  self.music = src
+  return true
+end
+
+function AudioQueue:stopMusic()
+  if self.music then
+    self.music:stop()
+    self.music = nil
+  end
+end
+
+function AudioQueue:isMusicPlaying()
+  return self.music ~= nil and self.music:isPlaying()
+end
+
+function AudioQueue:stopAll()
+  self:stop()
+  self:stopMusic()
+end
+
 function AudioQueue:update(dt)
+  if self.music and not self.music:isPlaying() then
+    self.music = nil
+  end
+
   if self.current then
     if not self.current:isPlaying() then
       self.current = nil

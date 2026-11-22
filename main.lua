@@ -22,6 +22,7 @@ local TurbowoordGame = require("src.minigames.turbowoord")
 
 local App = {
   debugHotzones = false,
+  hasGreetedInHub = false,
 }
 
 function love.load()
