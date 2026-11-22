@@ -25,7 +25,7 @@ Options:
   --no-assets            Build a code-only .love (side-load assets to Android save dir)
   --output <path>        Output .love path (default: <repo>/build/game.love)
   --love-android <path>  Copy game.love into a local love-android checkout,
-                         apply app icon and Android title
+                         apply app icon, title, and landscape orientation
   --app-name <name>      Android app title (default: OpenSMRV)
   --icon <path>          App icon PNG path (default: <repo>/logo.png)
   --build-apk            Run Gradle in --love-android and copy APK into build/
@@ -220,18 +220,31 @@ for manifest in manifest_paths:
         updated,
     )
 
-    def replace_activity_label(match):
+    def patch_activity_tag(match):
         tag = match.group(0)
         if "GameActivity" in tag or "LÖVE" in tag:
-            return re.sub(r'android:label="[^"]*"', f'android:label="{attr_escaped}"', tag)
+            tag = re.sub(r'android:label="[^"]*"', f'android:label="{attr_escaped}"', tag)
+        if "GameActivity" in tag:
+            if re.search(r'\bandroid:screenOrientation="[^"]*"', tag):
+                tag = re.sub(
+                    r'\bandroid:screenOrientation="[^"]*"',
+                    'android:screenOrientation="sensorLandscape"',
+                    tag,
+                )
+            else:
+                tag = re.sub(
+                    r'(\s*/?>)$',
+                    '\n            android:screenOrientation="sensorLandscape"\\1',
+                    tag,
+                )
         return tag
 
-    updated = re.sub(r"<activity\b[^>]*>", replace_activity_label, updated)
+    updated = re.sub(r"<activity\b[^>]*>", patch_activity_tag, updated)
     updated = updated.replace('android:label="LÖVE for Android"', f'android:label="{attr_escaped}"')
 
     if updated != orig:
         manifest.write_text(updated, encoding="utf-8")
-        print(f"Updated app title to '{app_name}' in {manifest}")
+        print(f"Updated app title ('{app_name}') and sensorLandscape orientation in {manifest}")
 
 strings_paths = [
     love_dir / "app" / "src" / "main" / "res" / "values" / "strings.xml",

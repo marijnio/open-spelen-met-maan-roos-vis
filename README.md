@@ -22,7 +22,7 @@ For example, in the original Windows 3.1 release of **Kleurplaat**, checking whe
 
 ## Prerequisites
 
-- **LÖVE 11.5** (`love`)
+- **LÖVE 11.5 or 12.0** (`love`)
 - **Python 3** (for local asset conversion)
 - **ImageMagick** (`magick`)
 - **FFmpeg** (`ffmpeg`)
@@ -70,9 +70,9 @@ love .
 
 ## Building for Android Tablets (`love-android`)
 
-You can package your own local copy into a standalone debug APK for an Android tablet using [love-android](https://github.com/love2d/love-android) (matching LÖVE 11.5). No APKs, `.love` bundles, or copyrighted assets are committed to Git (`build/`, `*.love`, `*.apk`, `love-android/`, and `assets/` are all gitignored).
+You can package your own local copy into a standalone debug APK for an Android tablet using [love-android](https://github.com/love2d/love-android) (matching LÖVE 11.5 or 12.0). No APKs, `.love` bundles, or copyrighted assets are committed to Git (`build/`, `*.love`, `*.apk`, `love-android/`, and `assets/` are all gitignored).
 
-1. **Prerequisites:** Java JDK (17 recommended), Android SDK (`ANDROID_HOME`), `zip`, and a local clone of `love-android` checked out at the `11.5` tag/branch.
+1. **Prerequisites:** Java JDK (17 recommended), Android SDK (`ANDROID_HOME`), `zip`, and a local clone of `love-android` (for LÖVE `11.5` or `12.0`/`main`).
 2. **Convert assets locally** (if not done already):
    ```sh
    python3 tools/convert_assets.py --source /path/to/CD/SYS --output assets
@@ -87,12 +87,12 @@ You can package your own local copy into a standalone debug APK for an Android t
    ```sh
    ./scripts/build_android.sh --love-android /path/to/love-android --build-apk
    ```
-   When `--love-android` is provided, the script also generates the Android `drawable-*/love.png` launcher icon densities from `logo.png` and sets the Android app title to `OpenSMRV` (configurable via `--app-name` and `--icon`).
+   When `--love-android` is provided, the script also generates the Android `drawable-*/love.png` launcher icon densities from `logo.png`, sets the Android app title to `OpenSMRV` (configurable via `--app-name` and `--icon`), and locks `GameActivity` to `sensorLandscape` orientation. On Android, the game also automatically launches in landscape-only immersive fullscreen.
    Manually, embedding corresponds to copying `build/game.love` to `app/src/embed/assets/game.love` (or `app/src/main/assets/game.love` depending on your `love-android` flavor) and running:
    ```sh
    cd /path/to/love-android
    ./gradlew assembleEmbedNoRecordDebug
    ```
-   *(Tip: in `love-android`'s `AndroidManifest.xml`, set `android:screenOrientation="sensorLandscape"` on `GameActivity` so the 4:3 canvas stays in tablet landscape mode.)*
+   *(Tip: if embedding manually instead of passing `--love-android`, set `android:screenOrientation="sensorLandscape"` on `GameActivity` in `AndroidManifest.xml` so the 4:3 canvas stays in tablet landscape mode.)*
 5. **Optional side-load mode (code-only `.love`):**
    If you prefer keeping media separate from the APK, run `./scripts/build_android.sh --no-assets` and copy your `assets/` folder into the app's external save directory on the tablet (`/sdcard/Android/data/<package>/files/save/spelen-met-maan-roos-vis/assets/`).

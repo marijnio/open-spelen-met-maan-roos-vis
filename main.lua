@@ -1,4 +1,4 @@
--- Entry point for Spelen met Maan Roos Vis (LÖVE 11.5).
+-- Entry point for Spelen met Maan Roos Vis (LÖVE 11.5 / 12.0).
 
 local Assets = require("src.core.assets")
 local AudioQueue = require("src.core.audio_queue")
@@ -27,7 +27,7 @@ local App = {
   activeTouchId = nil,
   pointerX = -1,
   pointerY = -1,
-  paused = false,
+  paused = false
 }
 
 --- Returns the current pointer in virtual 640x480 coordinates (vx, vy, inside).
@@ -41,9 +41,18 @@ function App:getVirtualPointer()
   return self.viewport:screenToVirtual(love.mouse.getPosition())
 end
 
+local function ensureMobileFullscreen()
+  if App.isTouchMode and love.window and love.window.setFullscreen then
+    if not (love.window.getFullscreen and love.window.getFullscreen()) then
+      love.window.setFullscreen(true, "desktop")
+    end
+  end
+end
+
 function love.load()
   local osName = love.system and love.system.getOS and love.system.getOS() or ""
   App.isTouchMode = (osName == "Android" or osName == "iOS")
+  ensureMobileFullscreen()
 
   Assets.setFilterMode("nearest")
   Assets.init()
@@ -94,6 +103,7 @@ function love.focus(focused)
     App.pointerY = -1
     App.audio:pauseAll()
   else
+    ensureMobileFullscreen()
     App.paused = false
     App.audio:resumeAll()
   end
