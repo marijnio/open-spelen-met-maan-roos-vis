@@ -10,106 +10,106 @@ TurbowoordGame.__index = TurbowoordGame
 local LEVEL_ROUNDS = {
   [1] = {
     { audio = "maan", words = { "maan", "naam", "man" } },
-    { audio = "sok",  words = { "sok",  "sop",  "bos" } },
-    { audio = "vis",  words = { "vis",  "wis",  "vos" } },
-    { audio = "ik",   words = { "ik",   "ki",   "is" } },
+    { audio = "sok", words = { "sok", "sop", "bos" } },
+    { audio = "vis", words = { "vis", "wis", "vos" } },
+    { audio = "ik", words = { "ik", "ki", "is" } },
     { audio = "roos", words = { "roos", "room", "poos" } },
-    { audio = "pen",  words = { "pen",  "ben",  "ren" } },
-    { audio = "vis",  words = { "vis",  "mis",  "fis" } },
-    { audio = "sok",  words = { "sok",  "rok",  "bok" } },
-    { audio = "pen",  words = { "pen",  "den",  "men" } },
-    { audio = "ik",   words = { "ik",   "vis",  "mis" } },
+    { audio = "pen", words = { "pen", "ben", "ren" } },
+    { audio = "vis", words = { "vis", "mis", "fis" } },
+    { audio = "sok", words = { "sok", "rok", "bok" } },
+    { audio = "pen", words = { "pen", "den", "men" } },
+    { audio = "ik", words = { "ik", "vis", "mis" } }
   },
   [2] = {
     { audio = "teen", words = { "teen", "been", "neet" } },
     { audio = "neus", words = { "neus", "reus", "meus" } },
     { audio = "buik", words = { "buik", "puik", "kiel" } },
-    { audio = "oog",  words = { "oog",  "ook",  "og" } },
-    { audio = "aap",  words = { "aap",  "aan",  "aab" } },
+    { audio = "oog", words = { "oog", "ook", "og" } },
+    { audio = "aap", words = { "aap", "aan", "aab" } },
     { audio = "teen", words = { "teen", "peen", "neen" } },
     { audio = "neus", words = { "neus", "meus", "deuk" } },
     { audio = "buik", words = { "buik", "duik", "ruik" } },
-    { audio = "oog",  words = { "oog",  "aag",  "aap" } },
-    { audio = "aap",  words = { "aap",  "paa",  "oog" } },
+    { audio = "oog", words = { "oog", "aag", "aap" } },
+    { audio = "aap", words = { "aap", "paa", "oog" } }
   },
   [3] = {
     { audio = "doos", words = { "doos", "boos", "poos" } },
     { audio = "zeep", words = { "zeep", "peer", "zeer" } },
     { audio = "koek", words = { "koek", "boek", "kook" } },
-    { audio = "eet",  words = { "eet",  "eed",  "tee" } },
-    { audio = "ijs",  words = { "ijs",  "eis",  "ies" } },
+    { audio = "eet", words = { "eet", "eed", "tee" } },
+    { audio = "ijs", words = { "ijs", "eis", "ies" } },
     { audio = "poes", words = { "poes", "koes", "zoek" } },
     { audio = "doos", words = { "doos", "roos", "does" } },
-    { audio = "eet",  words = { "eet",  "oet",  "eeb" } },
+    { audio = "eet", words = { "eet", "oet", "eeb" } },
     { audio = "koek", words = { "koek", "zoek", "koes" } },
-    { audio = "zeep", words = { "zeep", "zeer", "zer" } },
+    { audio = "zeep", words = { "zeep", "zeer", "zer" } }
   },
   [4] = {
     { audio = "roos", words = { "roos", "doos", "root" } },
-    { audio = "aap",  words = { "aap",  "oop",  "aab" } },
+    { audio = "aap", words = { "aap", "oop", "aab" } },
     { audio = "poes", words = { "poes", "boes", "poez" } },
     { audio = "maan", words = { "maan", "baan", "naam" } },
-    { audio = "pen",  words = { "pen",  "ben",  "ten" } },
+    { audio = "pen", words = { "pen", "ben", "ten" } },
     { audio = "buik", words = { "buik", "duik", "kuis" } },
     { audio = "reus", words = { "reus", "neus", "noes" } },
-    { audio = "ijs",  words = { "ijs",  "ijz",  "ijd" } },
+    { audio = "ijs", words = { "ijs", "ijz", "ijd" } },
     { audio = "zeep", words = { "zeep", "seep", "zeeb" } },
-    { audio = "doos", words = { "doos", "boot", "doop" } },
+    { audio = "doos", words = { "doos", "boot", "doop" } }
   },
   [5] = {
     { audio = "huis", words = { "huis", "nuis", "heis" } },
-    { audio = "bos",  words = { "bos",  "dos",  "pos" } },
-    { audio = "tak",  words = { "tak",  "lak",  "kat" } },
-    { audio = "hek",  words = { "hek",  "hok",  "nek" } },
-    { audio = "weg",  words = { "weg",  "veg",  "wep" } },
-    { audio = "hut",  words = { "hut",  "put",  "het" } },
+    { audio = "bos", words = { "bos", "dos", "pos" } },
+    { audio = "tak", words = { "tak", "lak", "kat" } },
+    { audio = "hek", words = { "hek", "hok", "nek" } },
+    { audio = "weg", words = { "weg", "veg", "wep" } },
+    { audio = "hut", words = { "hut", "put", "het" } },
     { audio = "huis", words = { "huis", "muis", "nuis" } },
-    { audio = "hek",  words = { "hek",  "bek",  "ken" } },
-    { audio = "weg",  words = { "weg",  "leg",  "wig" } },
-    { audio = "tak",  words = { "tak",  "kat",  "pak" } },
+    { audio = "hek", words = { "hek", "bek", "ken" } },
+    { audio = "weg", words = { "weg", "leg", "wig" } },
+    { audio = "tak", words = { "tak", "kat", "pak" } }
   },
   [6] = {
     { audio = "vuur", words = { "vuur", "wuur", "uur" } },
-    { audio = "jas",  words = { "jas",  "las",  "sas" } },
+    { audio = "jas", words = { "jas", "las", "sas" } },
     { audio = "bijl", words = { "bijl", "beil", "deil" } },
     { audio = "reus", words = { "reus", "neus", "deus" } },
     { audio = "riem", words = { "riem", "reim", "rien" } },
     { audio = "hout", words = { "hout", "nout", "houd" } },
-    { audio = "vuur", words = { "vuur", "uur",  "duur" } },
-    { audio = "jas",  words = { "jas",  "das",  "tas" } },
+    { audio = "vuur", words = { "vuur", "uur", "duur" } },
+    { audio = "jas", words = { "jas", "das", "tas" } },
     { audio = "bijl", words = { "bijl", "beil", "pijl" } },
-    { audio = "riem", words = { "riem", "kiem", "mier" } },
+    { audio = "riem", words = { "riem", "kiem", "mier" } }
   },
   [7] = {
     { audio = "duif", words = { "duif", "buiv", "duiv" } },
     { audio = "geit", words = { "geit", "gijt", "teig" } },
-    { audio = "uil",  words = { "uil",  "eil",  "lui" } },
+    { audio = "uil", words = { "uil", "eil", "lui" } },
     { audio = "pauw", words = { "pauw", "pouw", "dauw" } },
-    { audio = "ei",   words = { "ei",   "ij",   "ie" } },
+    { audio = "ei", words = { "ei", "ij", "ie" } },
     { audio = "duif", words = { "duif", "fuif", "buif" } },
     { audio = "geit", words = { "geit", "giet", "geid" } },
-    { audio = "uil",  words = { "uil",  "ui",   "uit" } },
+    { audio = "uil", words = { "uil", "ui", "uit" } },
     { audio = "pauw", words = { "pauw", "gauw", "lauw" } },
-    { audio = "ei",   words = { "ei",   "ui",   "ie" } },
+    { audio = "ei", words = { "ei", "ui", "ie" } }
   },
   [8] = {
-    { audio = "hek",  words = { "hek",  "nek",  "heek" } },
+    { audio = "hek", words = { "hek", "nek", "heek" } },
     { audio = "hout", words = { "hout", "houd", "heek" } },
     { audio = "pauw", words = { "pauw", "puaw", "bouw" } },
     { audio = "huis", words = { "huis", "luis", "ruis" } },
-    { audio = "weg",  words = { "weg",  "heg",  "zeg" } },
+    { audio = "weg", words = { "weg", "heg", "zeg" } },
     { audio = "vuur", words = { "vuur", "zuur", "huur" } },
     { audio = "reus", words = { "reus", "keus", "leus" } },
     { audio = "duif", words = { "duif", "duik", "buik" } },
     { audio = "geit", words = { "geit", "meid", "feit" } },
-    { audio = "jas",  words = { "jas",  "klas", "pas" } },
-  },
+    { audio = "jas", words = { "jas", "klas", "pas" } }
+  }
 }
 
 local PERM_TABLE = {
   { 1, 2, 3 },
   { 3, 2, 1 },
-  { 1, 3, 2 },
+  { 1, 3, 2 }
 }
 
 local EAR_X = 284
@@ -234,7 +234,7 @@ function TurbowoordGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
       else
         self.app.scenes:switch("hub")
       end
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -246,7 +246,7 @@ function TurbowoordGame:_addBaseChromeHotzones(onHelpClick, onTerugClick)
     h = 60,
     normalImage = { "ui", "help" },
     hoverImage = { "ui", "hel2" },
-    onClick = onHelpClick,
+    onClick = onHelpClick
   })
 end
 
@@ -280,7 +280,7 @@ function TurbowoordGame:_enterSettings()
         self.level = lvl
         self.roundIndex = 1
         self:_prepareRound()
-      end,
+      end
     })
   end
 
@@ -295,7 +295,7 @@ function TurbowoordGame:_enterSettings()
     hoverImage = { "ui", "startwe2" },
     onClick = function()
       self:_startGame(2)
-    end,
+    end
   })
 
   self.hotzones:add({
@@ -309,7 +309,7 @@ function TurbowoordGame:_enterSettings()
     hoverImage = { "ui", "startee2" },
     onClick = function()
       self:_startGame(1)
-    end,
+    end
   })
 
   self:_syncHover()
@@ -336,20 +336,24 @@ function TurbowoordGame:_startGame(players)
   self.app.audio:stop()
 
   self.hotzones:clear()
-  self:_addBaseChromeHotzones(function()
-    local round = self:_currentRound()
-    if round then
-      self.app.audio:playSequence({
-        { "jantje", "luisphp1" },
-        { "words", round.audio },
-      }, { gap = 0.25 })
-    else
-      self.app.audio:clearAndPlay("jantje", "luisphp1")
+  self:_addBaseChromeHotzones(
+    function()
+      local round = self:_currentRound()
+      if round then
+        self.app.audio:playSequence(
+          {
+            { "jantje", "luisphp1" },
+            { "words", round.audio }
+          }, { gap = 0.25 }
+        )
+      else
+        self.app.audio:clearAndPlay("jantje", "luisphp1")
+      end
+    end, function()
+      self.app.audio:stop()
+      self:_enterSettings()
     end
-  end, function()
-    self.app.audio:stop()
-    self:_enterSettings()
-  end)
+  )
 
   self:_syncHover()
   self:_prepareRound()
@@ -415,7 +419,7 @@ function TurbowoordGame:_updateCursor(vx, vy)
   end
   if self.phase == "playing" then
     local onInteractive = pointInRect(vx, vy, EAR_X, EAR_Y, EAR_W, EAR_H)
-      or (self:_tileSlotAt(vx, vy) ~= nil)
+        or (self:_tileSlotAt(vx, vy) ~= nil)
     Cursor.set(onInteractive and self.handCursor or self.arrowCursor)
   elseif self.phase == "settings" then
     Cursor.set(self.arrowCursor)
@@ -493,13 +497,15 @@ function TurbowoordGame:update(dt)
   elseif self.phase == "finishing" then
     self.phaseTimer = self.phaseTimer - dt
     if self.phaseTimer <= 0 then
-      self.app.scenes:switch("highscore", {
-        gameId = "turbowoord",
-        players = self.players,
-        scores = { self.scores[1], self.scores[2] },
-        returnTo = "turbowoord",
-        returnParams = { level = math.min(8, self.level + 1) },
-      })
+      self.app.scenes:switch(
+        "highscore", {
+          gameId = "turbowoord",
+          players = self.players,
+          scores = { self.scores[1], self.scores[2] },
+          returnTo = "turbowoord",
+          returnParams = { level = math.min(8, self.level + 1) }
+        }
+      )
     end
   end
 
@@ -707,8 +713,8 @@ function TurbowoordGame:mousepressed(vx, vy, button)
 
   if self.slotToWord[slot] == 1 then
     self.scores[self.activePlayer] = self.scores[self.activePlayer]
-      + self.timers[self.activePlayer]
-      + (self.level - 1)
+        + self.timers[self.activePlayer]
+        + (self.level - 1)
     self.app.audio:clearAndPlay("words", round.audio)
     self.phase = "correct_speak"
   else
