@@ -6,14 +6,14 @@ local HotzoneManager = require("src.core.hotzone")
 local ParentGateDialog = {}
 ParentGateDialog.__index = ParentGateDialog
 
-local DIALOG_W = 360
-local DIALOG_H = 314
-local DIALOG_X = math.floor((640 - DIALOG_W) / 2) -- 140
-local DIALOG_Y = math.floor((480 - DIALOG_H) / 2) -- 83
+local DIALOG_W = 392
+local DIALOG_H = 328
+local DIALOG_X = math.floor((640 - DIALOG_W) / 2) -- 124
+local DIALOG_Y = math.floor((480 - DIALOG_H) / 2) -- 76
 
-local ROW_Y = DIALOG_Y + 76 -- 159
+local ROW_Y = DIALOG_Y + 88 -- 164
 local ROW_H = 34
-local INPUT_X = DIALOG_X + 160 -- 300
+local INPUT_X = DIALOG_X + 176 -- 300
 local INPUT_Y = ROW_Y
 local INPUT_W = 84
 local INPUT_H = ROW_H
@@ -26,17 +26,17 @@ local BACK_H = ROW_H
 local KEY_W = 56
 local KEY_H = 42
 local KEY_GAP = 8
-local KEY_START_X = DIALOG_X + 24 -- 164
+local KEY_START_X = DIALOG_X + 40 -- 164
 local KEY_ROWS = {
-  { y = DIALOG_Y + 134, digits = { "1", "2", "3", "4", "5" } },
-  { y = DIALOG_Y + 184, digits = { "6", "7", "8", "9", "0" } },
+  { y = DIALOG_Y + 148, digits = { "1", "2", "3", "4", "5" } },
+  { y = DIALOG_Y + 198, digits = { "6", "7", "8", "9", "0" } },
 }
 
 local BTN_W = 72
 local BTN_H = 52
-local BTN_Y = DIALOG_Y + 242 -- 325
-local BTN_LEFT_X = DIALOG_X + 24 -- 164
-local BTN_RIGHT_X = DIALOG_X + DIALOG_W - 24 - BTN_W -- 404
+local BTN_Y = DIALOG_Y + 256 -- 332
+local BTN_LEFT_X = DIALOG_X + 40 -- 164
+local BTN_RIGHT_X = DIALOG_X + DIALOG_W - 40 - BTN_W -- 404
 
 local function drawBeveledButton(x, y, w, h, isHovered)
   love.graphics.setColor(0, 0, 0, 1)
@@ -116,7 +116,7 @@ function ParentGateDialog.new(app, opts)
   self.wrongAttempts = 0
   self.blinkTimer = 0
   self.titleFont = love.graphics.newFont(14)
-  self.promptFont = love.graphics.newFont(14)
+  self.promptFont = love.graphics.newFont(13)
   self.mathFont = love.graphics.newFont(22)
   self.keyFont = love.graphics.newFont(18)
   self.errorFont = love.graphics.newFont(13)
@@ -311,13 +311,13 @@ function ParentGateDialog:draw()
   -- Prompt text
   love.graphics.setColor(0, 0, 0, 1)
   love.graphics.setFont(self.promptFont)
-  love.graphics.printf(self.prompt, DIALOG_X + 18, DIALOG_Y + 34, DIALOG_W - 36, "center")
+  love.graphics.printf(self.prompt, DIALOG_X + 12, DIALOG_Y + 34, DIALOG_W - 24, "center")
 
   -- Equation + sunken answer input + backspace button
   love.graphics.setColor(0, 0, 0, 1)
   love.graphics.setFont(self.mathFont)
   local equation = string.format("%d x %d =", self.factorA, self.factorB)
-  love.graphics.printf(equation, DIALOG_X + 16, ROW_Y + 4, 136, "right")
+  love.graphics.printf(equation, DIALOG_X + 20, ROW_Y + 4, 148, "right")
 
   drawSunkenBox(INPUT_X, INPUT_Y, INPUT_W, INPUT_H)
   love.graphics.setColor(0, 0, 0, 1)
@@ -339,7 +339,7 @@ function ParentGateDialog:draw()
   if self.errorMessage then
     love.graphics.setColor(0.8, 0.05, 0.05, 1)
     love.graphics.setFont(self.errorFont)
-    love.graphics.printf(self.errorMessage, DIALOG_X + 18, DIALOG_Y + 114, DIALOG_W - 36, "center")
+    love.graphics.printf(self.errorMessage, DIALOG_X + 12, DIALOG_Y + 127, DIALOG_W - 24, "center")
   end
 
   -- Built-in 10-digit numeric keypad
