@@ -6,6 +6,7 @@ local HighScores = require("src.core.highscores")
 local HotzoneManager = require("src.core.hotzone")
 local ParentGateDialog = require("src.core.parent_gate_dialog")
 local Viewport = require("src.core.viewport")
+local VirtualKeyboard = require("src.core.virtual_keyboard")
 
 local HighScoreState = {}
 HighScoreState.__index = HighScoreState
@@ -60,9 +61,18 @@ local function drawBoldPrintf(text, x, y, limit, align)
   love.graphics.printf(text, x + 1, y, limit, align)
 end
 
-local function setVirtualKeyboard(enabled)
+local function isMobilePlatform()
+  local osName = love and love.system and love.system.getOS and love.system.getOS() or ""
+  return osName == "Android" or osName == "iOS"
+end
+
+local function setSystemTextInput(enabled)
   if love and love.keyboard and love.keyboard.setTextInput then
-    love.keyboard.setTextInput(enabled)
+    if isMobilePlatform() then
+      love.keyboard.setTextInput(false)
+    else
+      love.keyboard.setTextInput(enabled)
+    end
   end
 end
 
@@ -104,6 +114,14 @@ function HighScoreState.new(app)
   self.returnParams = nil
   self.twoPlayerQuads = nil
   self.twoPlayerQuadsBg = nil
+  self.keyboard = VirtualKeyboard.new(app, {
+    onChar = function(ch)
+      self:_appendText(ch)
+    end,
+    onBackspace = function()
+      self:_backspace()
+    end,
+  })
   return self
 end
 
@@ -151,7 +169,9 @@ function HighScoreState:_enterEntryPhase()
   self.phase = "entry"
   self.activeField = self.qualified[1] and 1 or 2
   love.keyboard.setKeyRepeat(true)
-  setVirtualKeyboard(true)
+  setSystemTextInput(true)
+  self.keyboard:reset(true)
+  self:_syncAutoShift()
   self.hotzones:clear()
 
   self.hotzones:add({
@@ -171,7 +191,7 @@ end
 
 function HighScoreState:_confirmEntry()
   love.keyboard.setKeyRepeat(false)
-  setVirtualKeyboard(false)
+  setSystemTextInput(false)
   if self.qualified[1] then
     HighScores.insert(self.gameId, self.names[1], self.scores[1])
   end
@@ -184,7 +204,7 @@ end
 function HighScoreState:_enterBoardPhase()
   self.phase = "board"
   love.keyboard.setKeyRepeat(false)
-  setVirtualKeyboard(false)
+  setSystemTextInput(false)
   self.hotzones:clear()
 
   self.hotzones:add({
@@ -232,7 +252,7 @@ end
 function HighScoreState:exit()
   self.resetDialog:close()
   love.keyboard.setKeyRepeat(false)
-  setVirtualKeyboard(false)
+  setSystemTextInput(false)
   self.hotzones:clear()
 end
 
@@ -245,6 +265,9 @@ function HighScoreState:update(dt)
   self.blinkTimer = self.blinkTimer + dt
   local vx, vy = self.app:getVirtualPointer()
   self.hotzones:update(vx, vy, self.app.isTouchMode)
+  if self.phase == "entry" then
+    self.keyboard:update(dt, vx, vy)
+  end
 end
 
 function HighScoreState:_canUseCompactTwoPlayer(bg)
@@ -325,6 +348,8 @@ function HighScoreState:_drawEntry()
   if self.players == 2 and self.qualified[2] then
     self:_drawEntryField(2)
   end
+
+  self.keyboard:draw()
 end
 
 function HighScoreState:_drawBoard()
@@ -381,6 +406,46 @@ function HighScoreState:draw()
   end
 end
 
+function HighScoreState:_syncAutoShift()
+  local cur = self.names[self.activeField] or ""
+  local last = cur:sub(-1)
+  self.keyboard:setShift(cur == "" or last == " " or last == "-")
+end
+
+function HighScoreState:_appendText(text)
+  if self.phase ~= "entry" or type(text) ~= "string" then
+    return
+  end
+  local cleaned = text:gsub("[%c]", "")
+  if cleaned == "" then
+    return
+  end
+  local cur = self.names[self.activeField] or ""
+  local candidate = cur .. cleaned
+  local len = utf8.len(candidate) or #candidate
+  if len > 14 then
+    return
+  end
+  if self.entryFont:getWidth(candidate) <= 188 then
+    self.names[self.activeField] = candidate
+    self.blinkTimer = 0
+    self:_syncAutoShift()
+  end
+end
+
+function HighScoreState:_backspace()
+  if self.phase ~= "entry" then
+    return
+  end
+  local cur = self.names[self.activeField] or ""
+  local byteOffset = utf8.offset(cur, -1)
+  if byteOffset then
+    self.names[self.activeField] = cur:sub(1, byteOffset - 1)
+    self.blinkTimer = 0
+    self:_syncAutoShift()
+  end
+end
+
 function HighScoreState:mousepressed(vx, vy, button)
   if self.resetDialog:isOpen() then
     return self.resetDialog:mousepressed(vx, vy, button)
@@ -390,13 +455,17 @@ function HighScoreState:mousepressed(vx, vy, button)
     return
   end
   if self.phase == "entry" and button == 1 then
+    if self.keyboard:mousepressed(vx, vy, button) then
+      return
+    end
     for field = 1, 2 do
       if self.qualified[field] then
         local _, rowY = self:_getEntryFieldGeometry(field)
         if vx >= ROW_HIT_X and vx <= (ROW_HIT_X + ROW_HIT_W) and vy >= rowY and vy <= (rowY + ROW_HIT_H) then
           self.activeField = field
           self.blinkTimer = 0
-          setVirtualKeyboard(true)
+          self:_syncAutoShift()
+          setSystemTextInput(true)
           return
         end
       end
@@ -408,23 +477,7 @@ function HighScoreState:textinput(text)
   if self.resetDialog:isOpen() then
     return
   end
-  if self.phase ~= "entry" or type(text) ~= "string" then
-    return
-  end
-  local cleaned = text:gsub("[%c]", "")
-  if cleaned == "" then
-    return
-  end
-  local cur = self.names[self.activeField] or ""
-  local len = utf8.len(cur) or #cur
-  if len >= 14 then
-    return
-  end
-  local candidate = cur .. cleaned
-  if self.entryFont:getWidth(candidate) <= 188 then
-    self.names[self.activeField] = candidate
-    self.blinkTimer = 0
-  end
+  self:_appendText(text)
 end
 
 function HighScoreState:keypressed(key)
@@ -434,21 +487,18 @@ function HighScoreState:keypressed(key)
 
   if self.phase == "entry" then
     if key == "backspace" then
-      local cur = self.names[self.activeField] or ""
-      local byteOffset = utf8.offset(cur, -1)
-      if byteOffset then
-        self.names[self.activeField] = cur:sub(1, byteOffset - 1)
-        self.blinkTimer = 0
-      end
+      self:_backspace()
     elseif key == "tab" then
       if self.players == 2 and self.qualified[1] and self.qualified[2] then
         self.activeField = (self.activeField == 1) and 2 or 1
         self.blinkTimer = 0
+        self:_syncAutoShift()
       end
     elseif key == "return" or key == "kpenter" then
       if self.activeField == 1 and self.players == 2 and self.qualified[2] then
         self.activeField = 2
         self.blinkTimer = 0
+        self:_syncAutoShift()
       else
         self:_confirmEntry()
       end
