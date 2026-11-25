@@ -9,7 +9,7 @@ INCLUDE_ASSETS=true
 OUTPUT_PATH="${REPO_ROOT}/build/game.love"
 LOVE_ANDROID_DIR=""
 BUILD_APK=false
-APP_NAME="OpenSMRV"
+APP_NAME="Maan Roos Vis"
 ICON_PATH="${REPO_ROOT}/logo.png"
 
 usage() {
