@@ -75,17 +75,16 @@ You can package your own local copy into a standalone debug APK for an Android t
    ```sh
    python3 tools/convert_assets.py --source /path/to/CD/SYS --output assets
    ```
-3. **Create the `.love` bundle:**
+3. **Build the Android debug APK (default):**
    ```sh
    ./scripts/build_android.sh
    ```
-   This packages `main.lua`, `conf.lua`, `logo.png` (when present), `src/`, and your local `assets/` into `build/game.love` (excludes `local_config.lua` and `backup/`).
-4. **Embed in `love-android` & compile the APK:**
-   Copy `build/game.love` into your local `love-android` checkout (or let the script handle embedding, icon generation, title configuration, and compilation):
+   By default, this packages `main.lua`, `conf.lua`, `logo.png` (when present), `src/`, and your local `assets/` into `build/game.love` (excluding `local_config.lua` and `backup/`), embeds it into `love-android` (auto-detected from `$LOVE_ANDROID_DIR`, `./love-android`, or `../love-android`, or specified with `--love-android <path>`), generates the Android `drawable-*/love.png` launcher icons from `logo.png`, sets the Android app title to `Maan Roos Vis` (configurable via `--app-name` and `--icon`), locks `GameActivity` to `sensorLandscape`, runs Gradle, and writes `build/maan-roos-vis-debug.apk` (override with `--apk-name`). On Android, the game also automatically launches in landscape-only immersive fullscreen.
+4. **Building only the `.love` bundle or embedding manually:**
+   If you only want `build/game.love` without building an APK, pass `--love-only`:
    ```sh
-   ./scripts/build_android.sh --love-android /path/to/love-android --build-apk
+   ./scripts/build_android.sh --love-only
    ```
-   When `--love-android` is provided, the script also generates the Android `drawable-*/love.png` launcher icon densities from `logo.png`, sets the Android app title to `OpenSMRV` (configurable via `--app-name` and `--icon`), and locks `GameActivity` to `sensorLandscape` orientation. On Android, the game also automatically launches in landscape-only immersive fullscreen.
    Manually, embedding corresponds to copying `build/game.love` to `app/src/embed/assets/game.love` (or `app/src/main/assets/game.love` depending on your `love-android` flavor) and running:
    ```sh
    cd /path/to/love-android
@@ -93,4 +92,4 @@ You can package your own local copy into a standalone debug APK for an Android t
    ```
    *(Tip: if embedding manually instead of passing `--love-android`, set `android:screenOrientation="sensorLandscape"` on `GameActivity` in `AndroidManifest.xml` so the 4:3 canvas stays in tablet landscape mode.)*
 5. **Optional side-load mode (code-only `.love`):**
-   If you prefer keeping media separate from the APK, run `./scripts/build_android.sh --no-assets` and copy your `assets/` folder into the app's external save directory on the tablet (`/sdcard/Android/data/<package>/files/save/spelen-met-maan-roos-vis/assets/`).
+   If you prefer keeping media separate from the APK, run `./scripts/build_android.sh --love-only --no-assets` and copy your `assets/` folder into the app's external save directory on the tablet (`/sdcard/Android/data/<package>/files/save/spelen-met-maan-roos-vis/assets/`).

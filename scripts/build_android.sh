@@ -7,8 +7,8 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ASSETS_DIR="${SMRV_ASSETS_DIR:-${REPO_ROOT}/assets}"
 INCLUDE_ASSETS=true
 OUTPUT_PATH="${REPO_ROOT}/build/game.love"
-LOVE_ANDROID_DIR=""
-BUILD_APK=false
+LOVE_ANDROID_DIR="${LOVE_ANDROID_DIR:-}"
+BUILD_APK=true
 APP_NAME="Maan Roos Vis"
 APK_NAME=""
 ICON_PATH="${REPO_ROOT}/logo.png"
@@ -18,19 +18,21 @@ usage() {
 Usage: scripts/build_android.sh [options]
 
 Packages the LÖVE Lua code (and optionally local converted assets) into a .love
-bundle ready for love-android, without modifying or tracking anything in Git.
+bundle, embeds it into love-android, and builds the Android debug APK by default,
+without modifying or tracking anything in Git.
 
 Options:
   --assets-dir <path>    Directory containing manifest.lua and converted media
                          (default: $SMRV_ASSETS_DIR or <repo>/assets)
   --no-assets            Build a code-only .love (side-load assets to Android save dir)
   --output <path>        Output .love path (default: <repo>/build/game.love)
-  --love-android <path>  Copy game.love into a local love-android checkout,
-                         apply app icon, title, and landscape orientation
+  --love-android <path>  Path to local love-android checkout (auto-detected from
+                         $LOVE_ANDROID_DIR, <repo>/love-android, or ../love-android)
   --app-name <name>      Android app title (default: Maan Roos Vis)
   --apk-name <name>      Output APK filename in build dir (default: derived from --app-name, e.g. maan-roos-vis-debug.apk)
   --icon <path>          App icon PNG path (default: <repo>/logo.png)
-  --build-apk            Run Gradle in --love-android and copy APK into build/
+  --build-apk            Run Gradle in --love-android and copy APK into build/ (default)
+  --love-only            Only build the .love bundle (skip embedding and APK compilation)
   -h, --help             Show this help text
 EOF
 }
@@ -103,6 +105,11 @@ while [[ $# -gt 0 ]]; do
       BUILD_APK=true
       shift
       ;;
+    --love-only)
+      BUILD_APK=false
+      LOVE_ANDROID_DIR=""
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -121,7 +128,22 @@ if ! command -v zip >/dev/null 2>&1; then
 fi
 
 if [[ "${BUILD_APK}" == true && -z "${LOVE_ANDROID_DIR}" ]]; then
-  echo "Error: --build-apk requires --love-android <path>." >&2
+  if [[ -d "${REPO_ROOT}/love-android" ]]; then
+    LOVE_ANDROID_DIR="${REPO_ROOT}/love-android"
+  elif [[ -d "${REPO_ROOT}/../love-android" ]]; then
+    LOVE_ANDROID_DIR="${REPO_ROOT}/../love-android"
+  fi
+fi
+
+if [[ "${BUILD_APK}" == true && -z "${LOVE_ANDROID_DIR}" ]]; then
+  echo "Error: Could not find a love-android checkout." >&2
+  echo "Checked: \$LOVE_ANDROID_DIR, ${REPO_ROOT}/love-android, ${REPO_ROOT}/../love-android" >&2
+  echo "Pass --love-android <path> to build an APK, or --love-only to only build game.love." >&2
+  exit 1
+fi
+
+if [[ -n "${LOVE_ANDROID_DIR}" && ! -d "${LOVE_ANDROID_DIR}" ]]; then
+  echo "Error: love-android directory not found: ${LOVE_ANDROID_DIR}" >&2
   exit 1
 fi
 
