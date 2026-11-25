@@ -28,7 +28,7 @@ Options:
   --love-android <path>  Copy game.love into a local love-android checkout,
                          apply app icon, title, and landscape orientation
   --app-name <name>      Android app title (default: Maan Roos Vis)
-  --apk-name <name>      Output APK filename in build dir (default: derived from --app-name, e.g. maan-roos-vis.apk)
+  --apk-name <name>      Output APK filename in build dir (default: derived from --app-name, e.g. maan-roos-vis-debug.apk)
   --icon <path>          App icon PNG path (default: <repo>/logo.png)
   --build-apk            Run Gradle in --love-android and copy APK into build/
   -h, --help             Show this help text
@@ -309,7 +309,7 @@ PY
         if [[ -z "${APK_SLUG}" ]]; then
           APK_SLUG="opensmrv"
         fi
-        APK_FILENAME="${APK_SLUG}.apk"
+        APK_FILENAME="${APK_SLUG}-debug.apk"
       fi
       cp "${BUILT_APK}" "${OUT_DIR}/${APK_FILENAME}"
       echo "Copied APK to ${OUT_DIR}/${APK_FILENAME}"
