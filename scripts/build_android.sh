@@ -10,6 +10,7 @@ OUTPUT_PATH="${REPO_ROOT}/build/game.love"
 LOVE_ANDROID_DIR=""
 BUILD_APK=false
 APP_NAME="Maan Roos Vis"
+APK_NAME=""
 ICON_PATH="${REPO_ROOT}/logo.png"
 
 usage() {
@@ -26,11 +27,16 @@ Options:
   --output <path>        Output .love path (default: <repo>/build/game.love)
   --love-android <path>  Copy game.love into a local love-android checkout,
                          apply app icon, title, and landscape orientation
-  --app-name <name>      Android app title (default: OpenSMRV)
+  --app-name <name>      Android app title (default: Maan Roos Vis)
+  --apk-name <name>      Output APK filename in build dir (default: derived from --app-name, e.g. maan-roos-vis.apk)
   --icon <path>          App icon PNG path (default: <repo>/logo.png)
   --build-apk            Run Gradle in --love-android and copy APK into build/
   -h, --help             Show this help text
 EOF
+}
+
+slugify_name() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
 }
 
 resize_icon() {
@@ -81,6 +87,11 @@ while [[ $# -gt 0 ]]; do
     --app-name)
       [[ $# -ge 2 ]] || { echo "Error: --app-name requires a value" >&2; exit 1; }
       APP_NAME="$2"
+      shift 2
+      ;;
+    --apk-name)
+      [[ $# -ge 2 ]] || { echo "Error: --apk-name requires a filename" >&2; exit 1; }
+      APK_NAME="$2"
       shift 2
       ;;
     --icon)
@@ -288,8 +299,20 @@ PY
 
     BUILT_APK="$(find "${LOVE_ANDROID_DIR}/app/build/outputs/apk" -type f -name '*.apk' | head -n 1 || true)"
     if [[ -n "${BUILT_APK}" ]]; then
-      cp "${BUILT_APK}" "${OUT_DIR}/$(basename "${BUILT_APK}")"
-      echo "Copied APK to ${OUT_DIR}/$(basename "${BUILT_APK}")"
+      if [[ -n "${APK_NAME}" ]]; then
+        APK_FILENAME="$(basename "${APK_NAME}")"
+        if [[ "${APK_FILENAME}" != *.apk ]]; then
+          APK_FILENAME="${APK_FILENAME}.apk"
+        fi
+      else
+        APK_SLUG="$(slugify_name "${APP_NAME}")"
+        if [[ -z "${APK_SLUG}" ]]; then
+          APK_SLUG="opensmrv"
+        fi
+        APK_FILENAME="${APK_SLUG}.apk"
+      fi
+      cp "${BUILT_APK}" "${OUT_DIR}/${APK_FILENAME}"
+      echo "Copied APK to ${OUT_DIR}/${APK_FILENAME}"
     else
       echo "Warning: Gradle succeeded but no APK was found under app/build/outputs/apk." >&2
     fi
