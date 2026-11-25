@@ -2,9 +2,10 @@
 
 local utf8 = require("utf8")
 local Assets = require("src.core.assets")
-local ConfirmDialog = require("src.core.confirm_dialog")
 local HighScores = require("src.core.highscores")
 local HotzoneManager = require("src.core.hotzone")
+local ParentGateDialog = require("src.core.parent_gate_dialog")
+local Viewport = require("src.core.viewport")
 
 local HighScoreState = {}
 HighScoreState.__index = HighScoreState
@@ -17,11 +18,33 @@ local GOOD_P1_ONLY_VO = { "fdbgd4a", "fdbgd4b" }
 local BAD_1P_VO = { "fdbft1a", "fdbft1b", "fdbft1c" }
 local BAD_2P_VO = { "fdbft2a", "fdbft2b", "fdbft2c" }
 
-local BOX_X = 200
+local ENTRY_BG_COLOR = { 204 / 255, 0, 51 / 255 }
+local ENTRY_OFFSET_X = -32
+local ENTRY_1P_OFFSET_Y = -56
+local ENTRY_2P_FALLBACK_OFFSET_Y = -65
+
+local BOX_X = 200 + ENTRY_OFFSET_X
 local BOX_W = 200
 local BOX_H = 29
-local BOX_Y = { 130, 240 }
-local SCORE_X = 430
+local BOX_Y_1P = { 130 + ENTRY_1P_OFFSET_Y }
+local BOX_Y_2P = { 43, 123 }
+local BOX_Y_2P_FALLBACK = { 130 + ENTRY_2P_FALLBACK_OFFSET_Y, 240 + ENTRY_2P_FALLBACK_OFFSET_Y }
+local SCORE_X = 430 + ENTRY_OFFSET_X
+
+local ROW_HIT_X = 106 + ENTRY_OFFSET_X
+local ROW_HIT_W = 295
+local ROW_HIT_H = 60
+local ROW_HIT_Y_1P = { 116 + ENTRY_1P_OFFSET_Y }
+local ROW_HIT_Y_2P = { 29, 109 }
+local ROW_HIT_Y_2P_FALLBACK = { 116 + ENTRY_2P_FALLBACK_OFFSET_Y, 226 + ENTRY_2P_FALLBACK_OFFSET_Y }
+
+-- Compacted horizontal strips of highsy2.png so both name fields stay well above the Android keyboard.
+local TWO_PLAYER_SLICES = {
+  { sy = 72, sh = 22, dy = 7 },
+  { sy = 116, sh = 80, dy = 29 },
+  { sy = 226, sh = 60, dy = 109 },
+  { sy = 315, sh = 22, dy = 169 },
+}
 
 local function pickRandom(pool)
   return pool[love.math.random(1, #pool)]
@@ -62,7 +85,7 @@ function HighScoreState.new(app)
   local self = setmetatable({}, HighScoreState)
   self.app = app
   self.hotzones = HotzoneManager.new(app.audio)
-  self.confirmDialog = ConfirmDialog.new(app)
+  self.resetDialog = ParentGateDialog.new(app)
   self.handlesEscape = true
 
   self.entryFont = love.graphics.newFont(20)
@@ -79,10 +102,13 @@ function HighScoreState.new(app)
   self.blinkTimer = 0
   self.returnTo = "hub"
   self.returnParams = nil
+  self.twoPlayerQuads = nil
+  self.twoPlayerQuadsBg = nil
   return self
 end
 
 function HighScoreState:enter(params)
+  self.resetDialog:close()
   params = params or {}
   self.gameId = params.gameId
   self.players = params.players or 1
@@ -132,7 +158,7 @@ function HighScoreState:_enterEntryPhase()
     id = "ok",
     label = "OK",
     x = 572,
-    y = 416,
+    y = 8,
     w = 60,
     h = 60,
     normalImage = { "ui", "okee" },
@@ -185,13 +211,13 @@ function HighScoreState:_enterBoardPhase()
     normalImage = { "ui", "opnieuw" },
     hoverImage = { "ui", "opnieu2" },
     onClick = function()
-      self.confirmDialog:open(
+      self.resetDialog:open(
         function()
           HighScores.reset()
           HighScores.save()
         end,
         nil,
-        "Weet je zeker dat je alle\nscores wilt wissen?",
+        "Weet je zeker dat je alle scores wilt wissen?\nLos de som op om te bevestigen:",
         "Wissen!"
       )
     end,
@@ -204,15 +230,15 @@ function HighScoreState:_goBack()
 end
 
 function HighScoreState:exit()
-  self.confirmDialog:close()
+  self.resetDialog:close()
   love.keyboard.setKeyRepeat(false)
   setVirtualKeyboard(false)
   self.hotzones:clear()
 end
 
 function HighScoreState:update(dt)
-  if self.confirmDialog:isOpen() then
-    self.confirmDialog:update(dt)
+  if self.resetDialog:isOpen() then
+    self.resetDialog:update(dt)
     return
   end
 
@@ -221,8 +247,43 @@ function HighScoreState:update(dt)
   self.hotzones:update(vx, vy, self.app.isTouchMode)
 end
 
+function HighScoreState:_canUseCompactTwoPlayer(bg)
+  if not bg then
+    return false
+  end
+  local bw, bh = bg:getDimensions()
+  return bw >= 640 and bh >= 337
+end
+
+function HighScoreState:_getTwoPlayerQuads(bg)
+  if self.twoPlayerQuadsBg ~= bg then
+    local bw, bh = bg:getDimensions()
+    local quads = {}
+    for i, slice in ipairs(TWO_PLAYER_SLICES) do
+      quads[i] = {
+        quad = love.graphics.newQuad(0, slice.sy, 640, slice.sh, bw, bh),
+        dy = slice.dy,
+      }
+    end
+    self.twoPlayerQuads = quads
+    self.twoPlayerQuadsBg = bg
+  end
+  return self.twoPlayerQuads
+end
+
+function HighScoreState:_getEntryFieldGeometry(field)
+  if self.players == 2 then
+    local bg = Assets.getImage("screens", "highsy2")
+    if self:_canUseCompactTwoPlayer(bg) then
+      return BOX_Y_2P[field], ROW_HIT_Y_2P[field]
+    end
+    return BOX_Y_2P_FALLBACK[field], ROW_HIT_Y_2P_FALLBACK[field]
+  end
+  return BOX_Y_1P[field], ROW_HIT_Y_1P[field]
+end
+
 function HighScoreState:_drawEntryField(field)
-  local y = BOX_Y[field]
+  local y = self:_getEntryFieldGeometry(field)
   local text = self.names[field]
 
   love.graphics.setFont(self.entryFont)
@@ -240,11 +301,22 @@ function HighScoreState:_drawEntryField(field)
 end
 
 function HighScoreState:_drawEntry()
+  love.graphics.setColor(ENTRY_BG_COLOR[1], ENTRY_BG_COLOR[2], ENTRY_BG_COLOR[3], 1)
+  love.graphics.rectangle("fill", 0, 0, Viewport.VIRTUAL_W, Viewport.VIRTUAL_H)
+  love.graphics.setColor(1, 1, 1, 1)
+
   local screenKey = (self.players == 2) and "highsy2" or "highsy1"
   local bg = Assets.getImage("screens", screenKey)
   if bg then
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(bg, 0, 0)
+    if self.players == 2 and self:_canUseCompactTwoPlayer(bg) then
+      for _, slice in ipairs(self:_getTwoPlayerQuads(bg)) do
+        love.graphics.draw(bg, slice.quad, ENTRY_OFFSET_X, slice.dy)
+      end
+    elseif self.players == 2 then
+      love.graphics.draw(bg, ENTRY_OFFSET_X, ENTRY_2P_FALLBACK_OFFSET_Y)
+    else
+      love.graphics.draw(bg, ENTRY_OFFSET_X, ENTRY_1P_OFFSET_Y)
+    end
   end
 
   if self.qualified[1] then
@@ -304,14 +376,14 @@ function HighScoreState:draw()
   love.graphics.setColor(1, 1, 1, 1)
   self.hotzones:draw(self.app.debugHotzones)
 
-  if self.confirmDialog:isOpen() then
-    self.confirmDialog:draw()
+  if self.resetDialog:isOpen() then
+    self.resetDialog:draw()
   end
 end
 
 function HighScoreState:mousepressed(vx, vy, button)
-  if self.confirmDialog:isOpen() then
-    return self.confirmDialog:mousepressed(vx, vy, button)
+  if self.resetDialog:isOpen() then
+    return self.resetDialog:mousepressed(vx, vy, button)
   end
 
   if self.hotzones:mousepressed(vx, vy, button) then
@@ -320,8 +392,8 @@ function HighScoreState:mousepressed(vx, vy, button)
   if self.phase == "entry" and button == 1 then
     for field = 1, 2 do
       if self.qualified[field] then
-        local by = BOX_Y[field]
-        if vx >= BOX_X and vx <= (BOX_X + BOX_W) and vy >= by and vy <= (by + BOX_H) then
+        local _, rowY = self:_getEntryFieldGeometry(field)
+        if vx >= ROW_HIT_X and vx <= (ROW_HIT_X + ROW_HIT_W) and vy >= rowY and vy <= (rowY + ROW_HIT_H) then
           self.activeField = field
           self.blinkTimer = 0
           setVirtualKeyboard(true)
@@ -333,6 +405,9 @@ function HighScoreState:mousepressed(vx, vy, button)
 end
 
 function HighScoreState:textinput(text)
+  if self.resetDialog:isOpen() then
+    return
+  end
   if self.phase ~= "entry" or type(text) ~= "string" then
     return
   end
@@ -353,8 +428,8 @@ function HighScoreState:textinput(text)
 end
 
 function HighScoreState:keypressed(key)
-  if self.confirmDialog:isOpen() then
-    return self.confirmDialog:keypressed(key)
+  if self.resetDialog:isOpen() then
+    return self.resetDialog:keypressed(key)
   end
 
   if self.phase == "entry" then
